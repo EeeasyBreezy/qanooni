@@ -1,9 +1,10 @@
+# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import health, greeting
 
 app = FastAPI(title="FastAPI React Starter")
 
-# Allow frontend dev server during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -12,14 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok"}
-
-
-@app.get("/api/greeting")
-def greeting(name: str = "World"):
-    return {"message": f"Hello, {name}!"}
-
-
+# Apply a common API prefix here (e.g., for versioning: "/api/v1")
+app.include_router(health.router, prefix="/api")
+app.include_router(greeting.router, prefix="/api")
