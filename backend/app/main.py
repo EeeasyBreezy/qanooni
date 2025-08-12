@@ -16,3 +16,4 @@ app.add_middleware(
 # Apply a common API prefix here (e.g., for versioning: "/api/v1")
 app.include_router(health.router, prefix="/api")
 app.include_router(greeting.router, prefix="/api")
+app.include_router(deployments.router, prefix="/api")
