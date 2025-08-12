@@ -12,11 +12,3 @@ def get_deployments_service(
     repo: IDeploymentRepository = Depends(get_deployment_repository),
 ) -> IDeploymentsService:
     return DeploymentsService(repo)
-
-@lru_cache
-def get_deployment_repository_singleton() -> IDeploymentRepository:
-    return DeploymentRepository()
-
-@lru_cache
-def get_deployments_service_singleton() -> IDeploymentsService:
-    return DeploymentsService(get_deployment_repository_singleton())
