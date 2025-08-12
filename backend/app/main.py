@@ -1,7 +1,7 @@
 # app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import health, greeting
+from app.routes.controllers import health, greeting
 
 app = FastAPI(title="FastAPI React Starter")
 
