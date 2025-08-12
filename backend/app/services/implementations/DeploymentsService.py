@@ -8,7 +8,6 @@ class DeploymentsService(IDeploymentsService):
     def __init__(self, repository: IDeploymentRepository):
         self.repository = repository
 
-    @override
     def get_by_id(self, id: str) -> Deployment:
         res = self.repository.get_by_id(id)
         if res is None:
@@ -16,7 +15,6 @@ class DeploymentsService(IDeploymentsService):
 
         return res
 
-    @override
     def create(self, deployment: Deployment) -> Deployment:
         res = self.repository.create(deployment)
         return res
