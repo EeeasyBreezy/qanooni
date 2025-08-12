@@ -21,4 +21,13 @@ npm run dev
 
 The frontend dev server proxies `/api/*` to `http://127.0.0.1:8000`.
 
+### One command dev
+From the project root:
+```bash
+./run.sh
+```
+This installs deps if needed and runs both servers concurrently:
+- Backend: `http://127.0.0.1:8000`
+- Frontend: `http://127.0.0.1:5173`
+
 
