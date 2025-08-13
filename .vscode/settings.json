@@ -1,0 +1,13 @@
+{
+    "python.defaultInterpreterPath": "/Users/alex/Desktop/Projects/qanooni/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "backend"
+    ],
+    "python.testing.cwd": "${workspaceFolder}",
+    "python.testing.pytestPath": "/Users/alex/Desktop/Projects/qanooni/.venv/bin/pytest",
+    "python.analysis.extraPaths": [
+        "backend"
+    ],
+    "python.envFile": "${workspaceFolder}/.env"
+}
