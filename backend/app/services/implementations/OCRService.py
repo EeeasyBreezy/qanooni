@@ -1,5 +1,7 @@
 from typing import Dict, List, Tuple
 from io import BytesIO
+from pathlib import Path
+from shutil import which
 
 from PIL import Image
 import pytesseract
@@ -14,11 +16,23 @@ DetectorFactory.seed = 0
 
 class OCRService(IOCR):
     def extract_text_and_tables(self, image_bytes: bytes) -> Tuple[str, str]:
+        self._configure_tesseract()
         image = self._load_image(image_bytes)
         ocr_data = self._run_ocr(image)
         text = self._reconstruct_text_by_lines(ocr_data)
         language = self._detect_language(text)
         return language, text
+
+    def _configure_tesseract(self) -> None:
+        # Ensure pytesseract knows where the tesseract binary is
+        if which("tesseract"):
+            pytesseract.pytesseract.tesseract_cmd = which("tesseract")
+            return
+        # Common Homebrew paths
+        for candidate in ["/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract"]:
+            if Path(candidate).exists():
+                pytesseract.pytesseract.tesseract_cmd = candidate
+                return
 
     def _load_image(self, image_bytes: bytes) -> Image.Image:
         return Image.open(BytesIO(image_bytes)).convert("RGB")
