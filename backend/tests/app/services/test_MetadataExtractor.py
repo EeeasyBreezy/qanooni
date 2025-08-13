@@ -20,11 +20,11 @@ class TestMetadataExtractor:
             "The parties also maintain offices in New York and Texas."
         )
         meta = MetadataExtractor().extract_metadata(text)
+        
         assert meta.jurisdiction == "California"
-        # Geography should include all mentioned tokens without duplicates
         assert "California" in meta.geography_mentioned
         assert "New York" in meta.geography_mentioned
-        assert "Texas" in meta.geograpclahy_mentioned
+        assert "Texas" in meta.geography_mentioned
 
     def test_extracts_industry_from_keywords(self):
         text = "We provide a SaaS analytics platform."
