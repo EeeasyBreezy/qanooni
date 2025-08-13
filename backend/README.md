@@ -13,4 +13,19 @@ Endpoints:
 - GET /api/health
 - GET /api/greeting?name=YourName
 
+OCR
+
+Prerequisites:
+- Install Tesseract OCR
+  - macOS (Homebrew):
+    - `brew install tesseract`
+    - optional: `brew install tesseract-lang`
+
+Endpoint:
+- POST `/ocr/extract` with `multipart/form-data` field `image` (JPEG/PNG)
+- Response JSON:
+  - `language`: detected language code
+  - `text`: recognized text
+  - `tables`: list of simple table matrices (heuristic)
+
 

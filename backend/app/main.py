@@ -12,4 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Apply a common API prefix here (e.g., for versioning: "/api/v1")
+from app.routes.controllers import health, greeting, deployments
+from app.routes.controllers import ocr
+
+app.include_router(ocr.router)
