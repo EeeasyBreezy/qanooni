@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from app.services.implementations.OCRService import OCRService
+from app.services.implementations.ImageProcessor import ImageProcessor
 
 
 TEST_DIR = Path(__file__).parent / "files"
@@ -13,16 +14,16 @@ TEST_IMAGE = TEST_DIR / "test.png"
 @pytest.mark.skipif(not TEST_IMAGE.exists(), reason="Test image not found")
 @pytest.mark.skipif(shutil.which("tesseract") is None, reason="Tesseract binary not installed")
 def test_ocr_smoke_extracts_some_text():
-    service = OCRService()
+    service = OCRService(ImageProcessor())
     image_bytes = TEST_IMAGE.read_bytes()
-    language, text = service.extract_text_and_tables(image_bytes)
+    language, text = service.extract_text(image_bytes)
 
     assert language == "en"
     assert len(text) > 0
 
 
 def test_reconstruct_text_by_lines_orders_words_left_to_right():
-    service = OCRService()
+    service = OCRService(ImageProcessor())
     fake_data = {
         "level": [5, 5, 5],
         "text": ["world", "hello", "!"],
@@ -42,5 +43,5 @@ def test_reconstruct_text_by_lines_orders_words_left_to_right():
 
 
 def test_detect_language_handles_empty_text():
-    service = OCRService()
+    service = OCRService(ImageProcessor())
     assert service._detect_language("") == "unknown"

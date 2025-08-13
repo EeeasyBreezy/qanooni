@@ -7,6 +7,7 @@ from PIL import Image
 import pytesseract
 from langdetect import detect, DetectorFactory
 
+from app.services.interfaces.IImageProcessor import IImageProcessor
 from app.services.interfaces.IOCR import IOCR
 
 
@@ -15,13 +16,23 @@ DetectorFactory.seed = 0
 
 
 class OCRService(IOCR):
-    def extract_text_and_tables(self, image_bytes: bytes) -> Tuple[str, str]:
+    def __init__(self, image_processor: IImageProcessor):
+        self._image_processor = image_processor
+
+    def extract_text(self, image_bytes: bytes) -> Tuple[str, str]:
         self._configure_tesseract()
-        image = self._load_image(image_bytes)
+        preprocessed_bytes = self.preprocess_image(image_bytes)
+        image = self._load_image(preprocessed_bytes)
         ocr_data = self._run_ocr(image)
         text = self._reconstruct_text_by_lines(ocr_data)
         language = self._detect_language(text)
         return language, text
+    
+    def preprocess_image(self, image_bytes: bytes) -> bytes:
+        processed = self._image_processor.grayscale(image_bytes)
+        processed = self._image_processor.denoise(processed)
+        processed = self._image_processor.binarize(processed)
+        return processed
 
     def _configure_tesseract(self) -> None:
         # Ensure pytesseract knows where the tesseract binary is
