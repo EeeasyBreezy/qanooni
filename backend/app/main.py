@@ -11,3 +11,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from app.routes.controllers import upload
+
+app.include_router(upload.router)
