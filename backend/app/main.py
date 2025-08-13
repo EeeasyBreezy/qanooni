@@ -11,8 +11,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-from app.routes.controllers import health, greeting, deployments
-from app.routes.controllers import ocr
-
-app.include_router(ocr.router)
