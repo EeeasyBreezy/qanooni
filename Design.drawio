@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2025-08-13T19:06:48.186Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="CoRzqNi5d31I-pvOTUPe" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2025-08-13T19:13:29.954Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="fEYHr3eGcGLpxELjlQFL" version="21.6.8" type="device">
   <diagram name="Document Ingestion" id="_38UfUeDVJzJ-mmB9s1-">
     <mxGraphModel dx="2157" dy="955" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -213,13 +213,10 @@
           <mxGeometry y="26" width="280" height="26" as="geometry" />
         </mxCell>
         <mxCell id="NjMU7uPc6qy0WdLyuUjt-55" value="IMetadataExtractor" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="310" y="1290" width="280" height="78" as="geometry" />
+          <mxGeometry x="310" y="1290" width="280" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="NjMU7uPc6qy0WdLyuUjt-56" value="parse_doc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NjMU7uPc6qy0WdLyuUjt-55">
+        <mxCell id="NjMU7uPc6qy0WdLyuUjt-56" value="extract_metadata" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NjMU7uPc6qy0WdLyuUjt-55">
           <mxGeometry y="26" width="280" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="NjMU7uPc6qy0WdLyuUjt-57" value="parse_pdf" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="NjMU7uPc6qy0WdLyuUjt-55">
-          <mxGeometry y="52" width="280" height="26" as="geometry" />
         </mxCell>
         <mxCell id="NjMU7uPc6qy0WdLyuUjt-61" value="IImageProcessor" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1180" y="1140" width="280" height="130" as="geometry" />
