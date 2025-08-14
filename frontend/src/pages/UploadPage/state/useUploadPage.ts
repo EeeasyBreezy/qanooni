@@ -54,8 +54,9 @@ export const useUploadPage = () => {
           setState((prev) => {
             const existing = prev.byId[fileId];
             if (!existing) return prev;
+
             return {
-              byId: { ...prev.byId, [fileId]: { ...existing, status: "success", progress: 100 } },
+              byId: { ...prev.byId, [fileId]: { ...existing, status: "processed" } },
               order: prev.order,
             };
           });
@@ -85,7 +86,7 @@ export const useUploadPage = () => {
           if (!existing) return prev;
           const updated: UploadItem = {
             ...existing,
-            status: "success",
+            status: "processing",
             progress: 100,
             abortController: undefined,
           };
