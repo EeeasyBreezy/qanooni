@@ -1,0 +1,10 @@
+INFO:     Will watch for changes in these directories: ['/Users/alex.gavrilov/Desktop/Projects/fast-api-react/backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [93021] using WatchFiles
+INFO:     Started server process [93026]
+INFO:     Waiting for application startup.
+/Users/alex.gavrilov/Desktop/Projects/fast-api-react/backend/app/repositories/entities/DocumentEntity.py:10: SAWarning: This declarative base already contains a class with the same class name and module name as app.repositories.entities.DocumentEntity.DocumentEntity, and will be replaced in the string-lookup table.
+  class DocumentEntity(Base):
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63537 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63537 - "GET /openapi.json HTTP/1.1" 200 OK
