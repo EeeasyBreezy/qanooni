@@ -14,8 +14,11 @@ app.add_middleware(
 )
 
 from app.routes.controllers import upload
+from app.routes.controllers import query, dashboard
 
 app.include_router(upload.router)
+app.include_router(query.router)
+app.include_router(dashboard.router)
 
 
 @app.on_event("startup")
