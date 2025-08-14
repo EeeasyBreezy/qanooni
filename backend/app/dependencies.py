@@ -1,10 +1,15 @@
 from functools import lru_cache
 
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+from app.db import get_db
 from app.services.implementations.ImageProcessor import ImageProcessor
 from app.services.implementations.OCRService import OCRService
 from app.services.implementations.TextExtractor import TextExtractor
 from app.services.implementations.MetadataExtractor import MetadataExtractor
 from app.services.implementations.UploadService import UploadService
+from app.repositories.implementations.DocumentRepository import DocumentRepository
 
 from app.services.interfaces.IImageProcessor import IImageProcessor
 from app.services.interfaces.IOCR import IOCR
@@ -33,11 +38,12 @@ def get_metadata_extractor() -> IMetadataExtractor:
     return MetadataExtractor()
 
 
-@lru_cache(maxsize=1)
-def get_upload_service() -> IUploadService:
+def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
+    repository = DocumentRepository(db)
     return UploadService(
         textExtractor=get_text_extractor(),
         metadataExtractor=get_metadata_extractor(),
+        repository=repository,
     )
 
 

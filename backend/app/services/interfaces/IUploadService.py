@@ -6,5 +6,5 @@ from app.services.model.File import File
 
 class IUploadService(ABC):
     @abstractmethod
-    def upload_files(self, files: List[File]) -> str:
+    def upload_files(self, files: List[File]) -> List[int]:
         pass

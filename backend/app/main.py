@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from app.db import init_db
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="FastAPI React Starter")
@@ -15,3 +16,8 @@ app.add_middleware(
 from app.routes.controllers import upload
 
 app.include_router(upload.router)
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    init_db()

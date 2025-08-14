@@ -1,0 +1,12 @@
+Ordered task checklist
+1. Add sqlalchemy and enable SQLite FTS5; create app/db.py.
+2. Create app/models/Document.py and migration/init SQL to create FTS table + triggers.
+3. Implement IDocumentRepository + DocumentRepository with create/search/aggregate.
+4. Wire repo and DB session in dependencies.py.
+5. Extend UploadService.upload_files to persist and index.
+6. Add routes/controllers/query.py and routes/controllers/dashboard.py; include routers in main.py.
+7. Add DTOs for requests/responses; update requirements.txt.
+8. Write unit tests for repo/search/dashboard.
+9. Update README with setup, design, and scaling notes.
+10. Frontend: add query and dashboard views binding to new endpoints.
+If you want, I can scaffold the DB models, repository, and endpoints now.

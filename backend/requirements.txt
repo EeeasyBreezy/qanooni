@@ -14,3 +14,4 @@ flashtext==2.7
 rapidfuzz==3.9.7
 geotext==0.4.0
 us==3.1.1
+SQLAlchemy==2.0.31

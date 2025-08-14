@@ -4,14 +4,17 @@ from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.ITextExtractor import ITextExtractor
 from app.services.interfaces.IUploadService import IUploadService
 from app.services.model.File import File
+from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 
 
 class UploadService(IUploadService):
-    def __init__(self, textExtractor: ITextExtractor, metadataExtractor: IMetadataExtractor):
+    def __init__(self, textExtractor: ITextExtractor, metadataExtractor: IMetadataExtractor, repository: IDocumentRepository):
         self._text_extractor = textExtractor
         self._metadata_extractor = metadataExtractor
+        self._repository = repository
 
-    def upload_files(self, files: List[File]) -> str:
+    def upload_files(self, files: List[File]) -> List[int]:
+        ids: List[int] = []
         for file in files:
             if file.mime_type == ContentType.pdf:
                 text = self._text_extractor.parse_pdf(file.content)
@@ -20,8 +23,15 @@ class UploadService(IUploadService):
             else:
                 raise ValueError(f"Unsupported file type: {file.mime_type}")
             metadata = self._metadata_extractor.extract_metadata(text)
-            
-            return ""
+            new_id = self._repository.create_document(
+                file_name=file.file_name,
+                mime_type=file.mime_type,
+                size_bytes=file.size_bytes,
+                text=text,
+                metadata=metadata,
+            )
+            ids.append(new_id)
+        return ids
     
     def _extract_text(self, file: File) -> str:
         if file.mime_type == ContentType.pdf:
