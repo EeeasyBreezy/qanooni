@@ -1,6 +1,7 @@
 import type { Column } from "@shared/components/DataTable";
 import LinearProgress from "@shared/components/LinearProgress";
 import FileActions from "./FileActions";
+import StatusCell from "./StatusCell";
 import type { UploadStatus } from "../model/UploadStatus";
 
 export type UploadRowShape = {
@@ -16,7 +17,11 @@ export const getColumns = <T extends UploadRowShape>(handlers: {
   removeItem: (id: string) => void;
 }): Column<T>[] => [
   { key: "name", header: "File", render: (r) => r.file.name },
-  { key: "status", header: "Status", render: (r) => r.status },
+  {
+    key: "status",
+    header: "Status",
+    render: (r) => <StatusCell status={r.status} />,
+  },
   {
     key: "progress",
     header: "Progress",
