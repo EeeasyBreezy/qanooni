@@ -3,3 +3,5 @@ frontend/node_modules
 **.pyc
 dist/
 /backend/app/data
+backend/backend.log
+frontend/frontend.log
