@@ -27,9 +27,6 @@ async def upload_file(
     request_id: str = Form(...),
     service: IUploadService = Depends(get_upload_service),
 ):
-    if not file:
-        raise HTTPException(status_code=400, detail="No file provided")
-
     if file.content_type not in {ContentType.pdf, ContentType.docx}:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
     app_file: AppFile = await map_file(file, request_id)
