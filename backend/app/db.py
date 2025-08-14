@@ -96,7 +96,7 @@ def _ensure_sqlite_fts5_objects() -> None:
 
 def init_db() -> None:
     # Import models to register metadata
-    from app.models.Document import Document  # noqa: F401
+    from app.repositories.entities.DocumentEntity import DocumentEntity  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _ensure_sqlite_fts5_objects()
