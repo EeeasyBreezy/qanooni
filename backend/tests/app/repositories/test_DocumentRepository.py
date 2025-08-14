@@ -88,7 +88,8 @@ class TestDocumentRepository:
         assert len(ids) == 2
 
         # Act: full text search for 'governed' should match first doc (FTS5)
-        results = self.repo.search(fts_query="governed", jurisdiction=None, agreement_type=None, limit=10)
+        page = self.repo.search(fts_query="governed", jurisdiction=None, agreement_type=None, limit=10)
+        results = page.items
 
         # Assert
         assert any(r["file_name"] == "nda_abudhabi.pdf" for r in results)
@@ -116,13 +117,14 @@ class TestDocumentRepository:
         )
 
         # Act: no FTS, filter by jurisdiction
-        results = self.repo.search(fts_query=None, jurisdiction="UAE", agreement_type=None, limit=10)
+        page = self.repo.search(fts_query=None, jurisdiction="UAE", agreement_type=None, limit=10)
+        results = page.items
 
         # Assert: only UAE docs
         assert all(r["jurisdiction"] == "UAE" for r in results)
         assert any(r["file_name"] == "msa_uae.pdf" for r in results)
 
-    def test_aggregations(self) -> None:
+    def test_segregated_aggregations(self) -> None:
         # Arrange
         self.repo.bulk_create_documents(
             [
@@ -132,12 +134,21 @@ class TestDocumentRepository:
             ]
         )
 
-        # Act
-        agg = self.repo.get_aggregations()
+        # Act: agreement types
+        agreements = self.repo.count_by_agreement_type()
+        agreements_map = {a.category: a.count for a in agreements}
+
+        # Act: countries
+        countries = self.repo.count_by_country()
+        countries_map = {c.category: c.count for c in countries}
+
+        # Act: industries (paginated)
+        industries_page = self.repo.count_by_industry(limit=10, offset=0, sort="desc")
+        industries_map = {i.category: i.count for i in industries_page.items}
 
         # Assert
-        assert agg["agreement_types"].get("Non-Disclosure Agreement", 0) >= 2
-        assert agg["jurisdictions"].get("UAE", 0) >= 2
-        assert agg["industries"].get("Technology", 0) >= 2
+        assert agreements_map.get("Non-Disclosure Agreement", 0) >= 2
+        assert countries_map.get("UAE", 0) >= 2
+        assert industries_map.get("Technology", 0) >= 2
 
 
