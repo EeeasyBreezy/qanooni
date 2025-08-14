@@ -1,8 +1,4 @@
-from typing import Dict, List, Optional
-
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from app.dependencies import get_document_query_service
 from app.routes.dto.QueryRequestDTO import QueryRequestDTO
 from app.routes.dto.QueryResponseDTO import QueryResponseDTO
