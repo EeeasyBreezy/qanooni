@@ -1,23 +1,31 @@
 import React from 'react';
-import { useDashboardStats } from '@entities/dashboardStats/queries/useDashboardStats';
-import type { DashboardStats } from '@entities/dashboardStats/model/DashboardStats';
+import { useAgreementTypes } from '@entities/dashboardStats/queries/useAgreementTypes';
+import { useCountries } from '@entities/dashboardStats/queries/useCountries';
 
 export const useDashboardPage = () => {
-  const { data, isLoading, isError, refetch } = useDashboardStats();
+  const agreements = useAgreementTypes();
+  const countries = useCountries();
 
   const agreementBarData = React.useMemo(() => {
-    const s = data as DashboardStats | undefined;
-    if (!s) return [] as Array<{ name: string; value: number }>;
-    return Object.entries(s.agreementTypes).map(([name, value]) => ({ name, value }));
-  }, [data]);
+    const items = agreements.data ?? [];
+    return items.map(({ category, count }) => ({ name: category, value: count }));
+  }, [agreements.data]);
 
   const jurisdictionsPieData = React.useMemo(() => {
-    const s = data as DashboardStats | undefined;
-    if (!s) return [] as Array<{ name: string; value: number }>;
-    return Object.entries(s.jurisdictions).map(([name, value]) => ({ name, value }));
-  }, [data]);
+    const items = countries.data ?? [];
+    return items.map(({ category, count }) => ({ name: category, value: count }));
+  }, [countries.data]);
 
-  return { stats: data, isLoading, isError, refetch, agreementBarData, jurisdictionsPieData };
+  return {
+    isLoading: agreements.isLoading || countries.isLoading,
+    isError: agreements.isError || countries.isError,
+    refetch: () => {
+      void agreements.refetch();
+      void countries.refetch();
+    },
+    agreementBarData,
+    jurisdictionsPieData,
+  };
 };
 
 
