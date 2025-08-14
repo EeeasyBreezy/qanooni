@@ -5,6 +5,7 @@ import { UploadItem } from "../model/UploadItem";
 import { mapFileListToUploadItemList } from "../mapping/mapFileListToUploadItemList";
 import { httpBaseUrl } from "@shared/http/httpClient";
 import { openSse } from "@shared/http/openSse";
+import { notificationsApiPaths } from "@entities/notifications/notificationsApiPaths";
 
 type UploadItemsState = {
   byId: Record<string, UploadItem>;
@@ -48,9 +49,7 @@ export const useUploadPage = () => {
   const startUploadHelper = async (fileId: string, file: File) => {
     const controller = new AbortController();
     try {
-      const base = httpBaseUrl.replace(/\/+$/, "");
-      const url = `${base}/notifications/stream/${fileId}`;
-      const es = openSse(url, (evt) => {
+      const es = openSse(notificationsApiPaths.stream(fileId), (evt) => {
         if (evt.data === "processed") {
           setState((prev) => {
             const existing = prev.byId[fileId];
