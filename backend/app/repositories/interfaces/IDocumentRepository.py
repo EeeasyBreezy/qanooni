@@ -33,11 +33,6 @@ class IDocumentRepository(ABC):
         """Full-text search joined with optional metadata filters."""
         raise NotImplementedError
 
-    @abstractmethod
-    def get_aggregations(self) -> Dict[str, Dict[str, int]]:
-        """Counts for agreement_types, jurisdictions, industries."""
-        raise NotImplementedError
-
     # Segregated aggregation methods
     @abstractmethod
     def count_by_agreement_type(self) -> List[AggregationResultEntity]:

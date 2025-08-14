@@ -1,7 +1,6 @@
 import type { IndustriesQueryParams } from './model/IndustriesQueryParams';
 
 export const dashboardApiPaths = {
-  root: '/dashboard',
   agreementTypes: '/dashboard/agreement-types',
   countries: '/dashboard/countries',
   industries: (params: IndustriesQueryParams) => {

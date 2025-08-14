@@ -79,20 +79,7 @@ class DocumentRepository(IDocumentRepository):
             }
             for d in docs
         ]
-
-    def get_aggregations(self) -> Dict[str, Dict[str, int]]:
-        def count_by(field: str) -> Dict[str, int]:
-            sql = text(f"SELECT {field} AS key, COUNT(*) AS cnt FROM documents GROUP BY {field}")
-            rows = self._db.execute(sql).mappings().all()
-            return {str(r["key"]): int(r["cnt"]) for r in rows if r["key"] is not None}
-
-        return {
-            "agreement_types": count_by("agreement_type"),
-            "jurisdictions": count_by("jurisdiction"),
-            "industries": count_by("industry"),
-        }
-
-    # New segregated aggregation methods
+        
     def count_by_agreement_type(self) -> List[AggregationResultEntity]:
         sql = text("SELECT agreement_type AS key, COUNT(*) AS cnt FROM documents GROUP BY agreement_type")
         rows = self._db.execute(sql).mappings().all()
