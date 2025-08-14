@@ -27,6 +27,23 @@ export class HttpClient {
     );
   }
 
+  openSse(
+    path: string,
+    onMessage: (e: MessageEvent) => void,
+    onError?: (e: Event) => void
+  ): EventSource {
+    const base = (this.instance.defaults.baseURL ?? '').replace(/\/$/, '');
+    const fullPath = /^https?:\/\//i.test(path)
+      ? path
+      : `${base}/${path.replace(/^\//, '')}`;
+    const es = new EventSource(fullPath);
+    es.onmessage = onMessage;
+    es.onerror = (e) => {
+      if (onError) onError(e);
+    };
+    return es;
+  }
+
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const res = await this.instance.get<T>(url, config);
     return res.data;

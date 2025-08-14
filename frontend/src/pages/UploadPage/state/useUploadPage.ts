@@ -3,8 +3,7 @@ import { useUploadFiles } from "@entities/files/queries/useUploadFiles";
 import { ContentTypes } from "@shared/consts/ContentTypes";
 import { UploadItem } from "../model/UploadItem";
 import { mapFileListToUploadItemList } from "../mapping/mapFileListToUploadItemList";
-import { httpBaseUrl } from "@shared/http/httpClient";
-import { openSse } from "@shared/http/openSse";
+import { httpClient } from "@shared/http/httpClient";
 import { notificationsApiPaths } from "@entities/notifications/notificationsApiPaths";
 
 type UploadItemsState = {
@@ -49,7 +48,7 @@ export const useUploadPage = () => {
   const startUploadHelper = async (fileId: string, file: File) => {
     const controller = new AbortController();
     try {
-      const es = openSse(notificationsApiPaths.stream(fileId), (evt) => {
+      const es = httpClient.openSse(notificationsApiPaths.stream(fileId), (evt) => {
         if (evt.data === "processed") {
           setState((prev) => {
             const existing = prev.byId[fileId];
