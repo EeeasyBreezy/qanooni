@@ -1,5 +1,5 @@
 # app/main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from app.db import init_db
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,9 +16,13 @@ app.add_middleware(
 from app.routes.controllers import upload
 from app.routes.controllers import query, dashboard
 
-app.include_router(upload.router)
-app.include_router(query.router)
-app.include_router(dashboard.router)
+# Central API router with /api prefix
+api = APIRouter(prefix="/api")
+api.include_router(upload.router)
+api.include_router(query.router)
+api.include_router(dashboard.router)
+
+app.include_router(api)
 
 
 @app.on_event("startup")
