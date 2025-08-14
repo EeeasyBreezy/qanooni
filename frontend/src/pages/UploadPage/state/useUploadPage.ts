@@ -31,26 +31,73 @@ export const useUploadPage = () => {
     setState((prev) => {
       const nextById = { ...prev.byId } as Record<string, UploadItem>;
       newItems.forEach((i) => {
-        nextById[i.id] = i;
+        nextById[i.id] = {...i, status: "uploading"};
       });
       return { byId: nextById, order: [...newIds, ...prev.order] };
     });
 
-    newIds.forEach((id) => void startUpload(id));
+    newItems.forEach((i) => void startUploadHelper(i.id, i.file));
+    
   };
 
-  const startUpload = async (itemId: string) => {
+  const startUploadHelper = async (fileId: string, file: File) => {
+    const controller = new AbortController();
+    try {
+        await upload({
+          file: file,
+          onProgress: (p) =>
+            setState((prev) => {
+              const existing = prev.byId[fileId];
+              if (!existing) return prev;
+              return {
+                byId: { ...prev.byId, [fileId]: { ...existing, progress: p } },
+                order: prev.order,
+              };
+            }),
+          signal: controller.signal,
+        });
+        setState((prev) => {
+          const existing = prev.byId[fileId];
+          if (!existing) return prev;
+          const updated: UploadItem = {
+            ...existing,
+            status: "success",
+            progress: 100,
+            abortController: undefined,
+          };
+          return {
+            byId: { ...prev.byId, [fileId]: updated },
+            order: prev.order,
+          };
+        });
+      } catch (e: any) {
+        setState((prev) => {
+          const existing = prev.byId[fileId];
+          if (!existing) return prev;
+          const updated: UploadItem = {
+            ...existing,
+            status: controller.signal.aborted ? "aborted" : "error",
+            errorMessage: e?.message ?? "Upload failed",
+            abortController: undefined,
+          };
+          return {
+            byId: { ...prev.byId, [fileId]: updated },
+            order: prev.order,
+          };
+        });
+      }
+  }
+
+  const startUpload = async (itemId: string, fileOverride?: File) => {
     let fileToUpload: File | undefined;
     const controller = new AbortController();
     setState((prev) => {
       const existing = prev.byId[itemId];
-
-      if (!existing) return prev;
-
-      fileToUpload = existing.file;
-
+      const chosen = fileOverride ?? existing?.file;
+      if (!chosen) return prev;
+      fileToUpload = chosen;
       const updated: UploadItem = {
-        ...existing,
+        ...(existing ?? { id: itemId, file: chosen, status: "idle" as const, progress: 0 }),
         status: "uploading",
         progress: 0,
         errorMessage: undefined,
@@ -61,51 +108,8 @@ export const useUploadPage = () => {
     });
 
     if (!fileToUpload) return;
-    
-    try {
-      await upload({
-        file: fileToUpload,
-        onProgress: (p) =>
-          setState((prev) => {
-            const existing = prev.byId[itemId];
-            if (!existing) return prev;
-            return {
-              byId: { ...prev.byId, [itemId]: { ...existing, progress: p } },
-              order: prev.order,
-            };
-          }),
-        signal: controller.signal,
-      });
-      setState((prev) => {
-        const existing = prev.byId[itemId];
-        if (!existing) return prev;
-        const updated: UploadItem = {
-          ...existing,
-          status: "success",
-          progress: 100,
-          abortController: undefined,
-        };
-        return {
-          byId: { ...prev.byId, [itemId]: updated },
-          order: prev.order,
-        };
-      });
-    } catch (e: any) {
-      setState((prev) => {
-        const existing = prev.byId[itemId];
-        if (!existing) return prev;
-        const updated: UploadItem = {
-          ...existing,
-          status: controller.signal.aborted ? "aborted" : "error",
-          errorMessage: e?.message ?? "Upload failed",
-          abortController: undefined,
-        };
-        return {
-          byId: { ...prev.byId, [itemId]: updated },
-          order: prev.order,
-        };
-      });
-    }
+
+    await startUploadHelper(itemId, fileToUpload);
   };
 
   const abortUpload = (itemId: string) => {
