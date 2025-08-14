@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { uploadFiles } from '../api';
+import { uploadFile } from '../api';
 import type { UploadResponseDTO } from '../dto/UploadResponseDTO';
 import type { UploadRequestDTO } from '../dto/UploadRequestDTO';
 
@@ -10,7 +10,7 @@ interface UseUploadFilesPayload extends UploadRequestDTO {
 export const useUploadFiles = () => {
   return useMutation({
     mutationFn: async (params: UseUploadFilesPayload): Promise<UploadResponseDTO> => {
-      return uploadFiles(params.files, params.onProgress);
+      return uploadFile({ file: params.file }, params.onProgress);
     },
   });
 };

@@ -1,5 +1,5 @@
 export type UploadRequestDTO = {
-  files: File[];
+  file: File;
 };
 
 
