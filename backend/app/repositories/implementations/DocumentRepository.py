@@ -4,54 +4,46 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.models.Document import Document
+from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
-from app.services.model.DocumentMetadata import DocumentMetadata
 
 
 class DocumentRepository(IDocumentRepository):
     def __init__(self, db: Session):
         self._db = db
 
-    def create_document(
-        self,
-        *,
-        file_name: str,
-        mime_type: str,
-        size_bytes: int,
-        text: str,
-        metadata: DocumentMetadata,
-    ) -> int:
+    def create_document(self, document: DocumentEntity) -> int:
         doc = Document(
-            file_name=file_name,
-            mime_type=mime_type,
-            size_bytes=size_bytes,
-            text=text,
-            agreement_type=metadata.agreement_type,
-            jurisdiction=metadata.jurisdiction,
-            industry=metadata.industry,
-            geography_json=json.dumps(metadata.geography_mentioned or []),
+            file_name=document.file_name,
+            mime_type=document.mime_type,
+            size_bytes=document.size_bytes,
+            text=document.text,
+            agreement_type=document.agreement_type,
+            jurisdiction=document.jurisdiction,
+            industry=document.industry,
+            geography_json=json.dumps(document.geography_mentioned or []),
         )
         self._db.add(doc)
         self._db.flush()
         return int(doc.id)
 
-    def bulk_create_documents(self, documents: List[dict]) -> List[int]:
-        ids: List[int] = []
+    def bulk_create_documents(self, documents: List[DocumentEntity]) -> List[int]:
+        doc_models: List[Document] = []
         for d in documents:
-            meta: DocumentMetadata = d["metadata"]
-            doc = Document(
-                file_name=d["file_name"],
-                mime_type=d["mime_type"],
-                size_bytes=d["size_bytes"],
-                text=d["text"],
-                agreement_type=meta.agreement_type,
-                jurisdiction=meta.jurisdiction,
-                industry=meta.industry,
-                geography_json=json.dumps(meta.geography_mentioned or []),
+            doc_models.append(
+                Document(
+                    file_name=d.file_name,
+                    mime_type=d.mime_type,
+                    size_bytes=d.size_bytes,
+                    text=d.text,
+                    agreement_type=d.agreement_type,
+                    jurisdiction=d.jurisdiction,
+                    industry=d.industry,
+                    geography_json=json.dumps(d.geography_mentioned or []),
+                )
             )
-            self._db.add(doc)
-            self._db.flush()
-            ids.append(int(doc.id))
-        return ids
+        self._db.add_all(doc_models)
+        self._db.flush()
+        return [int(m.id) for m in doc_models]
 
 

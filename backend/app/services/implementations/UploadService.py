@@ -4,6 +4,7 @@ from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.ITextExtractor import ITextExtractor
 from app.services.interfaces.IUploadService import IUploadService
 from app.services.model.File import File
+from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 
 
@@ -14,7 +15,7 @@ class UploadService(IUploadService):
         self._repository = repository
 
     def upload_files(self, files: List[File]) -> List[int]:
-        ids: List[int] = []
+        entities: List[DocumentEntity] = []
         for file in files:
             if file.mime_type == ContentType.pdf:
                 text = self._text_extractor.parse_pdf(file.content)
@@ -22,16 +23,23 @@ class UploadService(IUploadService):
                 text = self._text_extractor.parse_docx(file.content)
             else:
                 raise ValueError(f"Unsupported file type: {file.mime_type}")
+
             metadata = self._metadata_extractor.extract_metadata(text)
-            new_id = self._repository.create_document(
-                file_name=file.file_name,
-                mime_type=file.mime_type,
-                size_bytes=file.size_bytes,
-                text=text,
-                metadata=metadata,
+            entities.append(
+                DocumentEntity(
+                    id=None,
+                    file_name=file.file_name,
+                    mime_type=file.mime_type,
+                    size_bytes=file.size_bytes,
+                    text=text,
+                    agreement_type=metadata.agreement_type,
+                    jurisdiction=metadata.jurisdiction,
+                    industry=metadata.industry,
+                    geography_mentioned=metadata.geography_mentioned or [],
+                )
             )
-            ids.append(new_id)
-        return ids
+
+        return self._repository.bulk_create_documents(entities)
     
     def _extract_text(self, file: File) -> str:
         if file.mime_type == ContentType.pdf:
