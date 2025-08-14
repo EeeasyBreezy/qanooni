@@ -11,6 +11,7 @@ export const IndustriesTable: React.FC = () => {
     rowCount,
     page,
     pageSize,
+    pageSizeOptions,
     onPaginationModelChange,
     onSortModelChange,
   } = useIndustriesTable();
@@ -46,7 +47,7 @@ export const IndustriesTable: React.FC = () => {
             sorting: { sortModel: [{ field: "count", sort: "desc" }] },
           }}
           onSortModelChange={onSortModelChange}
-          pageSizeOptions={[5, 10, 25, 50]}
+          pageSizeOptions={pageSizeOptions}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={onPaginationModelChange}
         />

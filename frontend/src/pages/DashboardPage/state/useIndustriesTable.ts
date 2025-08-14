@@ -39,7 +39,7 @@ export const useIndustriesTable = () => {
     onPaginationModelChange,
     onSortModelChange,
     initialSortModel: [{ field: 'count', sort: 'desc' as const }],
-    pageSizeOptions: [5, 10, 25, 50] as const,
+    pageSizeOptions: [5, 10] as const,
   };
 };
 
