@@ -16,8 +16,13 @@ export const IndustriesTable: React.FC = () => {
   } = useIndustriesTable();
 
   const columns: GridColDef[] = [
-    { field: "category", headerName: "Industry", flex: 1, sortable: false },
-    { field: "count", headerName: "Count", width: 120, sortable: true },
+    {
+      field: "category",
+      headerName: "Industry",
+      flex: 1,
+      sortable: false,
+    },
+    { field: "count", headerName: "Count", sortable: true },
   ];
 
   return (
@@ -28,6 +33,9 @@ export const IndustriesTable: React.FC = () => {
       <Box sx={{ width: "100%" }}>
         <DataGrid
           autoHeight
+          disableColumnFilter
+          disableRowSelectionOnClick
+          disableMultipleRowSelection
           rows={rows}
           columns={columns}
           loading={isLoading}
