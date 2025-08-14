@@ -5,16 +5,17 @@ import type { UploadRequestDTO } from '../dto/UploadRequestDTO';
 
 export const uploadFile = async (
   payload: UploadRequestDTO,
-  onProgress?: (progress: number) => void
+  options?: { onProgress?: (progress: number) => void; signal?: AbortSignal }
 ): Promise<UploadResponseDTO> => {
   const form = new FormData();
   form.append('file', payload.file);
 
   return httpClient.post<UploadResponseDTO>(filesApiPaths.root, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    signal: options?.signal,
     onUploadProgress: (e) => {
-      if (!onProgress) return;
-      if (e.total) {
+      const onProgress = options?.onProgress;
+      if (e.total && onProgress) {
         const percent = Math.round((e.loaded * 100) / e.total);
         onProgress(percent);
       }

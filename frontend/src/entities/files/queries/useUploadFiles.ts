@@ -5,12 +5,13 @@ import type { UploadRequestDTO } from '../dto/UploadRequestDTO';
 
 interface UseUploadFilesPayload extends UploadRequestDTO {
   onProgress?: (p: number) => void;
+  signal?: AbortSignal;
 }
 
 export const useUploadFiles = () => {
   return useMutation({
     mutationFn: async (params: UseUploadFilesPayload): Promise<UploadResponseDTO> => {
-      return uploadFile({ file: params.file }, params.onProgress);
+      return uploadFile({ file: params.file }, { onProgress: params.onProgress, signal: params.signal });
     },
   });
 };
