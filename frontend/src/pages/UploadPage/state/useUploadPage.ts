@@ -18,8 +18,13 @@ export type UploadItem = {
   abortController?: AbortController;
 };
 
+type UploadItemsState = {
+  byId: Record<string, UploadItem>;
+  order: string[];
+};
+
 export const useUploadPage = () => {
-  const [items, setItems] = React.useState<UploadItem[]>([]);
+  const [state, setState] = React.useState<UploadItemsState>({ byId: {}, order: [] });
   const { mutateAsync: upload } = useUploadFiles();
   const allowedTypes = [ContentTypes.pdf, ContentTypes.docx];
 
@@ -33,79 +38,79 @@ export const useUploadPage = () => {
         status: "idle" as const,
         progress: 0,
       }));
-    setItems((prev) => [...newItems, ...prev]);
+    setState((prev) => {
+      const nextById = { ...prev.byId } as Record<string, UploadItem>;
+      const newIds = newItems.map((i) => {
+        nextById[i.id] = i;
+        return i.id;
+      });
+      return { byId: nextById, order: [...newIds, ...prev.order] };
+    });
   }, []);
 
   const startUpload = React.useCallback(
     async (itemId: string) => {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId
-            ? {
-                ...i,
-                status: "uploading",
-                progress: 0,
-                errorMessage: undefined,
-              }
-            : i
-        )
-      );
-      const item = items.find((i) => i.id === itemId);
-      if (!item) return;
+      let fileToUpload: File | undefined;
       const controller = new AbortController();
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId ? { ...i, abortController: controller } : i
-        )
-      );
+      setState((prev) => {
+        const existing = prev.byId[itemId];
+        if (!existing) return prev;
+        fileToUpload = existing.file;
+        const updated: UploadItem = {
+          ...existing,
+          status: "uploading",
+          progress: 0,
+          errorMessage: undefined,
+          abortController: controller,
+        };
+        return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
+      });
+      if (!fileToUpload) return;
       try {
         await upload({
-          file: item.file,
+          file: fileToUpload,
           onProgress: (p) =>
-            setItems((prev) =>
-              prev.map((i) => (i.id === itemId ? { ...i, progress: p } : i))
-            ),
+            setState((prev) => {
+              const existing = prev.byId[itemId];
+              if (!existing) return prev;
+              return { byId: { ...prev.byId, [itemId]: { ...existing, progress: p } }, order: prev.order };
+            }),
           signal: controller.signal,
         });
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === itemId
-              ? {
-                  ...i,
-                  status: "success",
-                  progress: 100,
-                  abortController: undefined,
-                }
-              : i
-          )
-        );
+        setState((prev) => {
+          const existing = prev.byId[itemId];
+          if (!existing) return prev;
+          const updated: UploadItem = { ...existing, status: "success", progress: 100, abortController: undefined };
+          return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
+        });
       } catch (e: any) {
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === itemId
-              ? {
-                  ...i,
-                  status: controller.signal.aborted ? "aborted" : "error",
-                  errorMessage: e?.message ?? "Upload failed",
-                  abortController: undefined,
-                }
-              : i
-          )
-        );
+        setState((prev) => {
+          const existing = prev.byId[itemId];
+          if (!existing) return prev;
+          const updated: UploadItem = {
+            ...existing,
+            status: controller.signal.aborted ? "aborted" : "error",
+            errorMessage: e?.message ?? "Upload failed",
+            abortController: undefined,
+          };
+          return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
+        });
       }
     },
-    [items, upload]
+    [upload]
   );
 
   const abortUpload = React.useCallback(
     (itemId: string) => {
-      const item = items.find((i) => i.id === itemId);
-      item?.abortController?.abort();
-      setItems((prev) =>
-        prev.map((i) => (i.id === itemId ? { ...i, status: "aborted" } : i))
-      );
+      const existing = state.byId[itemId];
+      existing?.abortController?.abort();
+      setState((prev) => {
+        const cur = prev.byId[itemId];
+        if (!cur) return prev;
+        return { byId: { ...prev.byId, [itemId]: { ...cur, status: "aborted" } }, order: prev.order };
+      });
     },
-    [items]
+    [state.byId]
   );
 
   const retryUpload = React.useCallback(
@@ -116,11 +121,19 @@ export const useUploadPage = () => {
   );
 
   const removeItem = React.useCallback((itemId: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== itemId));
+    setState((prev) => {
+      if (!prev.byId[itemId]) return prev;
+      const nextById = { ...prev.byId } as Record<string, UploadItem>;
+      delete nextById[itemId];
+      const nextOrder = prev.order.filter((id) => id !== itemId);
+      return { byId: nextById, order: nextOrder };
+    });
   }, []);
 
+  const rows: UploadItem[] = React.useMemo(() => state.order.map((id) => state.byId[id]).filter(Boolean) as UploadItem[], [state]);
+
   return {
-    items,
+    items: rows,
     addFiles,
     startUpload,
     abortUpload,
