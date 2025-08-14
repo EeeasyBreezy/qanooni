@@ -1,27 +1,19 @@
 import React from "react";
 import Typography from "@shared/components/Typography";
 import Box from "@shared/components/Box";
-import Stack from "@shared/components/Stack";
-import { useIndustries } from "@entities/dashboardStats/queries/useIndustries";
-import type { SortOrder } from "@entities/dashboardStats/model/IndustriesQueryParams";
-import DataGrid, {
-  type GridColDef,
-  type GridPaginationModel,
-  type GridSortModel,
-} from "@shared/components/DataGrid";
-
-const DEFAULT_PAGE_SIZE = 10;
+import DataGrid, { type GridColDef } from "@shared/components/DataGrid";
+import { useIndustriesTable } from "../state/useIndustriesTable";
 
 export const IndustriesTable: React.FC = () => {
-  const [pageSize, setPageSize] = React.useState<number>(DEFAULT_PAGE_SIZE);
-  const [page, setPage] = React.useState<number>(0);
-  const [sort, setSort] = React.useState<SortOrder>("desc");
-
-  const offset = page * pageSize;
-  const { data, isLoading } = useIndustries({ limit: pageSize, offset, sort });
-
-  const rows = (data?.items ?? []).map((r) => ({ id: r.category, ...r }));
-  const rowCount = data?.total ?? 0;
+  const {
+    isLoading,
+    rows,
+    rowCount,
+    page,
+    pageSize,
+    onPaginationModelChange,
+    onSortModelChange,
+  } = useIndustriesTable();
 
   const columns: GridColDef[] = [
     { field: "category", headerName: "Industry", flex: 1, sortable: false },
@@ -33,7 +25,7 @@ export const IndustriesTable: React.FC = () => {
       <Typography variant="h6" sx={{ mb: 1 }}>
         Industry Coverage
       </Typography>
-      <div style={{ width: "100%" }}>
+      <Box sx={{ width: "100%" }}>
         <DataGrid
           autoHeight
           rows={rows}
@@ -45,19 +37,12 @@ export const IndustriesTable: React.FC = () => {
           initialState={{
             sorting: { sortModel: [{ field: "count", sort: "desc" }] },
           }}
-          onSortModelChange={(model: GridSortModel) => {
-            const s = (model[0]?.sort ?? "desc") as SortOrder;
-            setPage(0);
-            setSort(s);
-          }}
+          onSortModelChange={onSortModelChange}
           pageSizeOptions={[5, 10, 25, 50]}
           paginationModel={{ page, pageSize }}
-          onPaginationModelChange={(m: GridPaginationModel) => {
-            if (m.pageSize !== pageSize) setPageSize(m.pageSize);
-            if (m.page !== page) setPage(m.page);
-          }}
+          onPaginationModelChange={onPaginationModelChange}
         />
-      </div>
+      </Box>
     </Box>
   );
 };
