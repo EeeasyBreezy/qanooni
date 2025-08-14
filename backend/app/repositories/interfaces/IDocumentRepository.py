@@ -36,4 +36,20 @@ class IDocumentRepository(ABC):
         """Counts for agreement_types, jurisdictions, industries."""
         raise NotImplementedError
 
+    # Segregated aggregation methods
+    @abstractmethod
+    def count_by_agreement_type(self) -> Dict[str, int]:
+        """Returns counts grouped by agreement_type as a mapping of value -> count."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def count_by_country(self) -> Dict[str, int]:
+        """Returns counts grouped by jurisdiction (country) as a mapping of value -> count."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0) -> List[Dict[str, int]]:
+        """Returns a list of {"key": str, "cnt": int} sorted by count desc with pagination."""
+        raise NotImplementedError
+
 

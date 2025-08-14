@@ -93,4 +93,32 @@ class DocumentRepository(IDocumentRepository):
             "industries": count_by("industry"),
         }
 
+    # New segregated aggregation methods
+    def count_by_agreement_type(self) -> Dict[str, int]:
+        sql = text("SELECT agreement_type AS key, COUNT(*) AS cnt FROM documents GROUP BY agreement_type")
+        rows = self._db.execute(sql).mappings().all()
+        return {str(r["key"]): int(r["cnt"]) for r in rows if r["key"] is not None}
+
+    def count_by_country(self) -> Dict[str, int]:
+        sql = text("SELECT jurisdiction AS key, COUNT(*) AS cnt FROM documents GROUP BY jurisdiction")
+        rows = self._db.execute(sql).mappings().all()
+        return {str(r["key"]): int(r["cnt"]) for r in rows if r["key"] is not None}
+
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0) -> List[Dict[str, int]]:
+        sql = text(
+            """
+            SELECT industry AS key, COUNT(*) AS cnt
+            FROM documents
+            GROUP BY industry
+            ORDER BY cnt DESC
+            LIMIT :limit OFFSET :offset
+            """
+        )
+        rows = self._db.execute(sql, {"limit": limit, "offset": offset}).mappings().all()
+        return [
+            {"key": str(r["key"]), "cnt": int(r["cnt"]) }
+            for r in rows
+            if r["key"] is not None
+        ]
+
 
