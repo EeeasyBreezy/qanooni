@@ -1,8 +1,10 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { config } from '@shared/config/env'
 
-if (import.meta.env.DEV) {
+
+if (config.useMocks) {
   const { worker } = await import('./mocks/browser')
   await worker.start({ onUnhandledRequest: 'bypass' })
 }
