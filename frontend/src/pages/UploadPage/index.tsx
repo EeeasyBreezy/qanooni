@@ -2,15 +2,11 @@ import React from "react";
 import PageContainer from "@shared/components/PageContainer";
 import Typography from "@shared/components/Typography";
 import Stack from "@shared/components/Stack";
-import LinearProgress from "@shared/components/LinearProgress";
-import IconButton from "@shared/components/IconButton";
 import Button from "@shared/components/Button";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ReplayIcon from "@mui/icons-material/Replay";
-import StopIcon from "@mui/icons-material/Stop";
-import DataTable, { Column } from "@shared/components/DataTable";
+import DataTable from "@shared/components/DataTable";
 import FileDropzone from "@shared/components/FileDropzone";
 import { useUploadFiles } from "@entities/files/queries/useUploadFiles";
+import { getColumns } from "./components/getColumns";
 
 type UploadItem = {
   id: string;
@@ -20,6 +16,7 @@ type UploadItem = {
   errorMessage?: string;
   abortController?: AbortController;
 };
+
 
 const UploadPage: React.FC = () => {
   const [items, setItems] = React.useState<UploadItem[]>([]);
@@ -110,50 +107,7 @@ const UploadPage: React.FC = () => {
   const removeItem = (itemId: string) =>
     setItems((prev) => prev.filter((i) => i.id !== itemId));
 
-  const columns: Column<UploadItem>[] = [
-    { key: "name", header: "File", render: (r) => r.file.name },
-    { key: "status", header: "Status", render: (r) => r.status },
-    {
-      key: "progress",
-      header: "Progress",
-      render: (r) => (
-        <LinearProgress variant="determinate" value={r.progress} />
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (r) => (
-        <Stack direction="row" spacing={1} alignItems="center">
-          {r.status === "uploading" && (
-            <IconButton
-              aria-label="abort"
-              onClick={() => abortUpload(r.id)}
-              size="small"
-            >
-              <StopIcon fontSize="small" />
-            </IconButton>
-          )}
-          {(r.status === "error" || r.status === "aborted") && (
-            <IconButton
-              aria-label="retry"
-              onClick={() => retryUpload(r.id)}
-              size="small"
-            >
-              <ReplayIcon fontSize="small" />
-            </IconButton>
-          )}
-          <IconButton
-            aria-label="remove"
-            onClick={() => removeItem(r.id)}
-            size="small"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
+  const columns = getColumns<UploadItem>({ abortUpload, retryUpload, removeItem });
 
   return (
     <PageContainer>
