@@ -68,9 +68,10 @@ class UploadService(IUploadService):
                         repo.bulk_create_documents([entity])
 
                     try:
-                        publish_done(entity.file_name, "processed")
-                    except Exception:
-                        pass
+                        # Use the upload request id as the notification channel key
+                        publish_done(f.request_id, "processed")
+                    except Exception as exception:
+                        print(exception)
                 finally:
                     self._queue.task_done()
             except Exception:
