@@ -1,13 +1,14 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import Typography from '@shared/components/Typography';
+import { FileExtensions } from '@shared/consts/FileExtensions';
 
 type FileDropzoneProps = {
   onFilesSelected: (files: FileList | null) => void;
   accept?: string;
 };
 
-const FileDropzone: React.FC<FileDropzoneProps> = ({ onFilesSelected, accept = '.pdf,.docx' }) => {
+const FileDropzone: React.FC<FileDropzoneProps> = ({ onFilesSelected, accept = `${FileExtensions.pdf},${FileExtensions.docx}` }) => {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = React.useState(false);
 

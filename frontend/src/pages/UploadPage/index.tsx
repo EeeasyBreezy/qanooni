@@ -5,109 +5,18 @@ import Stack from "@shared/components/Stack";
 import Button from "@shared/components/Button";
 import DataTable from "@shared/components/DataTable";
 import FileDropzone from "@shared/components/FileDropzone";
-import { useUploadFiles } from "@entities/files/queries/useUploadFiles";
 import { getColumns } from "./components/getColumns";
-
-type UploadItem = {
-  id: string;
-  file: File;
-  status: "idle" | "uploading" | "success" | "error" | "aborted";
-  progress: number;
-  errorMessage?: string;
-  abortController?: AbortController;
-};
-
+import { useUploadPage } from "./state/useUploadPage";
 
 const UploadPage: React.FC = () => {
-  const [items, setItems] = React.useState<UploadItem[]>([]);
+  const { items, addFiles, startUpload, abortUpload, retryUpload, removeItem } =
+    useUploadPage();
 
-  const { mutateAsync: upload } = useUploadFiles();
-
-  const addFiles = (files: FileList | null) => {
-    if (!files) return;
-    const newItems: UploadItem[] = Array.from(files)
-      .filter(
-        (f) =>
-          [
-            "application/pdf",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          ].includes(f.type) || /\.pdf$|\.docx$/i.test(f.name)
-      )
-      .map((f) => ({
-        id: `${f.name}-${Date.now()}-${Math.random()}`,
-        file: f,
-        status: "idle",
-        progress: 0,
-      }));
-    setItems((prev) => [...newItems, ...prev]);
-  };
-
-  const startUpload = async (itemId: string) => {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === itemId
-          ? { ...i, status: "uploading", progress: 0, errorMessage: undefined }
-          : i
-      )
-    );
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
-    const controller = new AbortController();
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === itemId ? { ...i, abortController: controller } : i
-      )
-    );
-    try {
-      await upload({
-        file: item.file,
-        onProgress: (p) =>
-          setItems((prev) =>
-            prev.map((i) => (i.id === itemId ? { ...i, progress: p } : i))
-          ),
-        signal: controller.signal,
-      });
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId
-            ? {
-                ...i,
-                status: "success",
-                progress: 100,
-                abortController: undefined,
-              }
-            : i
-        )
-      );
-    } catch (e: any) {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId
-            ? {
-                ...i,
-                status: controller.signal.aborted ? "aborted" : "error",
-                errorMessage: e?.message ?? "Upload failed",
-                abortController: undefined,
-              }
-            : i
-        )
-      );
-    }
-  };
-
-  const abortUpload = (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    item?.abortController?.abort();
-    setItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, status: "aborted" } : i))
-    );
-  };
-
-  const retryUpload = (itemId: string) => startUpload(itemId);
-  const removeItem = (itemId: string) =>
-    setItems((prev) => prev.filter((i) => i.id !== itemId));
-
-  const columns = getColumns<UploadItem>({ abortUpload, retryUpload, removeItem });
+  const columns = getColumns<(typeof items)[number]>({
+    abortUpload,
+    retryUpload,
+    removeItem,
+  });
 
   return (
     <PageContainer>
