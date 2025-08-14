@@ -20,20 +20,18 @@ async def map_file(file: UploadFile) -> AppFile:
     )
 
 @router.post("")
-async def upload_files(
-    files: List[UploadFile] = FastAPIFile(...),
+async def upload_file(
+    file: UploadFile = FastAPIFile(...),
     service: IUploadService = Depends(get_upload_service),
 ):
-    if not files:
-        raise HTTPException(status_code=400, detail="No files provided")
+    if not file:
+        raise HTTPException(status_code=400, detail="No file provided")
 
-    app_files: List[AppFile] = []
-    for f in files:
-        if f.content_type not in {ContentType.pdf, ContentType.docx}:
-            raise HTTPException(status_code=400, detail=f"Unsupported file type: {f.content_type}")
-        app_files.append(await map_file(f))
+    if file.content_type not in {ContentType.pdf, ContentType.docx}:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
 
-    result = service.upload_files(app_files)
+    app_file: AppFile = await map_file(file)
+    result = service.upload_files([app_file])
     return {"result": result}
 
 
