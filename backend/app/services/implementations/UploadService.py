@@ -1,8 +1,7 @@
 import json
-from typing import List, Optional, Callable
+from typing import List, Callable
 import queue
 import threading
-import uuid
 from app.common.ContentTypes import ContentType
 from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.ITextExtractor import ITextExtractor
