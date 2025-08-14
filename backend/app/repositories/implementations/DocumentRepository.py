@@ -14,9 +14,9 @@ class DocumentRepository(IDocumentRepository):
         self._db = db
 
     def create_document(self, document: DocumentEntity) -> int:
-        self._db.add(doc)
+        self._db.add(document)
         self._db.flush()
-        return int(doc.id)
+        return int(document.id)
 
     def bulk_create_documents(self, documents: List[DocumentEntity]) -> List[int]:
         self._db.add_all(documents)
@@ -36,10 +36,10 @@ class DocumentRepository(IDocumentRepository):
             sql = text(
                 """
                 SELECT d.id, d.file_name, d.jurisdiction, d.agreement_type, d.industry,
-                       bm25(fts) AS rank
+                       bm25(doc_fts) AS rank
                 FROM documents d
-                JOIN doc_fts fts ON fts.rowid = d.id
-                WHERE fts MATCH :fts_query
+                JOIN doc_fts ON doc_fts.rowid = d.id
+                WHERE doc_fts MATCH :fts_query
                   AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
                   AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
                 ORDER BY rank ASC
@@ -59,14 +59,14 @@ class DocumentRepository(IDocumentRepository):
             return [dict(r) for r in rows]
 
         # Fallback LIKE search or no fts_query
-        q = self._db.query(Document)
+        q = self._db.query(DocumentEntity)
         if fts_query:
             like = f"%{fts_query}%"
-            q = q.filter(Document.text.ilike(like))
+            q = q.filter(DocumentEntity.text.ilike(like))
         if jurisdiction:
-            q = q.filter(Document.jurisdiction == jurisdiction)
+            q = q.filter(DocumentEntity.jurisdiction == jurisdiction)
         if agreement_type:
-            q = q.filter(Document.agreement_type == agreement_type)
+            q = q.filter(DocumentEntity.agreement_type == agreement_type)
         q = q.limit(limit).offset(offset)
         docs = q.all()
         return [

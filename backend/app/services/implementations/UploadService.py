@@ -27,7 +27,6 @@ class UploadService(IUploadService):
             metadata = self._metadata_extractor.extract_metadata(text)
             entities.append(
                 DocumentEntity(
-                    id=None,
                     file_name=file.file_name,
                     mime_type=file.mime_type,
                     size_bytes=file.size_bytes,
@@ -35,7 +34,7 @@ class UploadService(IUploadService):
                     agreement_type=metadata.agreement_type,
                     jurisdiction=metadata.jurisdiction,
                     industry=metadata.industry,
-                    geography_mentioned=metadata.geography_mentioned or [],
+                    geography_json=None,
                 )
             )
 

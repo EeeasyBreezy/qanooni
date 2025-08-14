@@ -52,6 +52,10 @@ def _ensure_sqlite_fts5_objects() -> None:
     if not DATABASE_URL.startswith("sqlite"):
         return
 
+    # Ensure base table exists before creating FTS and triggers
+    from app.repositories.entities.DocumentEntity import DocumentEntity  # noqa: F401
+    Base.metadata.create_all(bind=engine)
+
     # doc_fts virtual table mirrors documents.text with content sync
     if not _sqlite_object_exists("doc_fts", "table"):
         with engine.connect() as conn:
@@ -95,9 +99,15 @@ def _ensure_sqlite_fts5_objects() -> None:
 
 
 def init_db() -> None:
-    # Import models to register metadata
-    from app.repositories.entities.DocumentEntity import DocumentEntity  # noqa: F401
+    # Reload entity module so its Base binding matches this module's Base
+    import importlib
+    import app.repositories.entities.DocumentEntity as entity_module  # type: ignore
+    try:
+        importlib.reload(entity_module)
+    except Exception:
+        pass
 
+    # Create tables, then FTS objects
     Base.metadata.create_all(bind=engine)
     _ensure_sqlite_fts5_objects()
 
