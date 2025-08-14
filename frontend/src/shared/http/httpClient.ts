@@ -16,7 +16,6 @@ export class HttpClient {
       baseURL,
       timeout: timeoutMs,
       headers: {
-        'Content-Type': 'application/json',
         ...defaultHeaders,
       },
       withCredentials: false,

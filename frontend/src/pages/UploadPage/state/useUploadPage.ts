@@ -54,13 +54,7 @@ export const useUploadPage = () => {
       });
       return { byId: nextById, order: [...newIds, ...prev.order] };
     });
-    // Start uploads immediately for newly added files
-    newIds.forEach((id) => {
-      // Defer to ensure state update is applied
-      setTimeout(() => {
-        void startUpload(id);
-      }, 0);
-    });
+    
   }, []);
 
   const startUpload = React.useCallback(

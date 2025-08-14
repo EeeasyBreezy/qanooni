@@ -11,7 +11,7 @@ export const uploadFile = async (
   form.append('file', payload.file);
 
   return httpClient.post<UploadResponseDTO>(filesApiPaths.root, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    // Let Axios set the proper multipart boundary automatically
     signal: options?.signal,
     onUploadProgress: (e) => {
       const onProgress = options?.onProgress;
