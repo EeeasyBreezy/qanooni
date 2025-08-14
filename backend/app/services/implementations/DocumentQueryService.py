@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+import re
 
 from app.common.model.Pagination import Pagination
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
@@ -34,8 +35,9 @@ class DocumentQueryService(IDocumentQueryService):
 
     def run_query(self, *, question: str, limit: int, offset: int) -> Pagination[SearchRow]:
         filters = self._derive_filters(question)
+        fts_query = self._build_fts_query(question)
         page = self._repo.search(
-            fts_query=question,
+            fts_query=fts_query,
             jurisdiction=filters["jurisdiction"],
             agreement_type=filters["agreement_type"],
             limit=limit,
@@ -52,5 +54,16 @@ class DocumentQueryService(IDocumentQueryService):
             for r in page.items
         ]
         return Pagination(items=items, offset=page.offset, limit=page.limit, total=page.total)
+
+    def _build_fts_query(self, question: str) -> Optional[str]:
+        # Tokenize: keep alphanumerics, drop short tokens/punctuation
+        tokens = re.findall(r"[A-Za-z0-9]+", question.lower())
+        tokens = [t for t in tokens if len(t) > 1]
+        if not tokens:
+            return None
+        # Build a simple OR query with wildcard suffix to broaden matches
+        # Example: token1* OR token2* OR token3*
+        parts = [f"{t}*" for t in tokens]
+        return " OR ".join(parts)
 
 
