@@ -11,7 +11,7 @@ interface UseUploadFilesPayload extends UploadRequestDTO {
 export const useUploadFiles = () => {
   return useMutation({
     mutationFn: async (params: UseUploadFilesPayload): Promise<UploadResponseDTO> => {
-      return uploadFile({ file: params.file }, { onProgress: params.onProgress, signal: params.signal });
+      return uploadFile({ file: params.file, request_id: params.request_id }, { onProgress: params.onProgress, signal: params.signal });
     },
   });
 };

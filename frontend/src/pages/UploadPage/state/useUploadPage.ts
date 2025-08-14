@@ -3,6 +3,8 @@ import { useUploadFiles } from "@entities/files/queries/useUploadFiles";
 import { ContentTypes } from "@shared/consts/ContentTypes";
 import { UploadItem } from "../model/UploadItem";
 import { mapFileListToUploadItemList } from "../mapping/mapFileListToUploadItemList";
+import { httpBaseUrl } from "@shared/http/httpClient";
+import { openSse } from "@shared/http/openSse";
 
 type UploadItemsState = {
   byId: Record<string, UploadItem>;
@@ -16,6 +18,7 @@ export const useUploadPage = () => {
   });
   const { mutateAsync: upload } = useUploadFiles();
   const allowedTypes = [ContentTypes.pdf, ContentTypes.docx];
+  const sourcesRef = React.useRef<Map<string, EventSource>>(new Map());
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -35,14 +38,35 @@ export const useUploadPage = () => {
       });
       return { byId: nextById, order: [...newIds, ...prev.order] };
     });
-
-    newItems.forEach((i) => void startUploadHelper(i.id, i.file));
+    // Open SSE subscriptions and start uploads
+    newItems.forEach((i) => {
+      void startUploadHelper(i.id, i.file);
+    });
     
   };
 
   const startUploadHelper = async (fileId: string, file: File) => {
     const controller = new AbortController();
     try {
+      const base = httpBaseUrl.replace(/\/+$/, "");
+      const url = `${base}/notifications/stream/${fileId}`;
+      const es = openSse(url, (evt) => {
+        if (evt.data === "processed") {
+          setState((prev) => {
+            const existing = prev.byId[fileId];
+            if (!existing) return prev;
+            return {
+              byId: { ...prev.byId, [fileId]: { ...existing, status: "success", progress: 100 } },
+              order: prev.order,
+            };
+          });
+          // close and remove subscription
+          es.close();
+          sourcesRef.current.delete(fileId);
+        }
+      });
+
+      sourcesRef.current.set(fileId, es);
         await upload({
           file: file,
           request_id: fileId,
@@ -89,16 +113,15 @@ export const useUploadPage = () => {
       }
   }
 
-  const startUpload = async (itemId: string, fileOverride?: File) => {
+  const startUpload = async (itemId: string) => {
     let fileToUpload: File | undefined;
     const controller = new AbortController();
     setState((prev) => {
       const existing = prev.byId[itemId];
-      const chosen = fileOverride ?? existing?.file;
-      if (!chosen) return prev;
-      fileToUpload = chosen;
+      if (!existing) return prev;
+
       const updated: UploadItem = {
-        ...(existing ?? { id: itemId, file: chosen, status: "idle" as const, progress: 0 }),
+        ...existing,
         status: "uploading",
         progress: 0,
         errorMessage: undefined,
@@ -116,6 +139,9 @@ export const useUploadPage = () => {
   const abortUpload = (itemId: string) => {
     const existing = state.byId[itemId];
     existing?.abortController?.abort();
+    // close SSE
+    const s = sourcesRef.current.get(itemId);
+    if (s) { s.close(); sourcesRef.current.delete(itemId); }
     setState((prev) => {
       const cur = prev.byId[itemId];
       if (!cur) return prev;
@@ -131,6 +157,9 @@ export const useUploadPage = () => {
   };
 
   const removeItem = (itemId: string) => {
+    // close SSE if any
+    const s = sourcesRef.current.get(itemId);
+    if (s) { s.close(); sourcesRef.current.delete(itemId); }
     setState((prev) => {
       if (!prev.byId[itemId]) return prev;
       const nextById = { ...prev.byId } as Record<string, UploadItem>;
@@ -143,6 +172,14 @@ export const useUploadPage = () => {
   const rows: UploadItem[] = state.order
     .map((id) => state.byId[id])
     .filter(Boolean) as UploadItem[];
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      sourcesRef.current.forEach((es) => es.close());
+      sourcesRef.current.clear();
+    };
+  }, []);
 
   return {
     items: rows,
