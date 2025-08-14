@@ -18,7 +18,7 @@ async def map_file(file: UploadFile) -> AppFile:
         content=await file.read()
     )
 
-@router.post("/files")
+@router.post("")
 async def upload_files(
     files: List[UploadFile] = File(...),
     service: IUploadService = Depends(get_upload_service),
