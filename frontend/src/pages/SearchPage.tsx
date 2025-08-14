@@ -1,10 +1,14 @@
 import React from 'react';
+import PageContainer from '@shared/components/PageContainer';
+import Typography from '@mui/material/Typography';
 
 const SearchPage: React.FC = () => {
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Search</h1>
-    </div>
+    <PageContainer>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Search
+      </Typography>
+    </PageContainer>
   );
 };
 
