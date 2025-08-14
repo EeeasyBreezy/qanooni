@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File as FastAPIFile, HTTPException, Depends
 
 from app.common.ContentTypes import ContentType
 from app.dependencies import get_upload_service
@@ -11,16 +11,17 @@ from app.services.model.File import File as AppFile
 router = APIRouter(prefix="/upload", tags=["upload"])
 
 async def map_file(file: UploadFile) -> AppFile:
+    content_bytes = await file.read()
     return AppFile(
         file_name=file.filename,
         mime_type=file.content_type,
-        size_bytes=len(await file.read()),
-        content=await file.read()
+        size_bytes=len(content_bytes),
+        content=content_bytes
     )
 
 @router.post("")
 async def upload_files(
-    files: List[UploadFile] = File(...),
+    files: List[UploadFile] = FastAPIFile(...),
     service: IUploadService = Depends(get_upload_service),
 ):
     if not files:
