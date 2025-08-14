@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
+from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
 
 class DocumentRepository(IDocumentRepository):
     def __init__(self, db: Session):
@@ -92,29 +93,38 @@ class DocumentRepository(IDocumentRepository):
         }
 
     # New segregated aggregation methods
-    def count_by_agreement_type(self) -> Dict[str, int]:
+    def count_by_agreement_type(self) -> List[AggregationResultEntity]:
         sql = text("SELECT agreement_type AS key, COUNT(*) AS cnt FROM documents GROUP BY agreement_type")
         rows = self._db.execute(sql).mappings().all()
-        return {str(r["key"]): int(r["cnt"]) for r in rows if r["key"] is not None}
+        return [
+            AggregationResultEntity(category=str(r["key"]), count=int(r["cnt"]))
+            for r in rows
+            if r["key"] is not None
+        ]
 
-    def count_by_country(self) -> Dict[str, int]:
+    def count_by_country(self) -> List[AggregationResultEntity]:
         sql = text("SELECT jurisdiction AS key, COUNT(*) AS cnt FROM documents GROUP BY jurisdiction")
         rows = self._db.execute(sql).mappings().all()
-        return {str(r["key"]): int(r["cnt"]) for r in rows if r["key"] is not None}
+        return [
+            AggregationResultEntity(category=str(r["key"]), count=int(r["cnt"]))
+            for r in rows
+            if r["key"] is not None
+        ]
 
-    def count_by_industry(self, *, limit: int = 10, offset: int = 0) -> List[Dict[str, int]]:
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResultEntity]:
+        sort_dir = "ASC" if (str(sort).lower() == "asc") else "DESC"
         sql = text(
-            """
+            f"""
             SELECT industry AS key, COUNT(*) AS cnt
             FROM documents
             GROUP BY industry
-            ORDER BY cnt DESC
+            ORDER BY cnt {sort_dir}
             LIMIT :limit OFFSET :offset
             """
         )
         rows = self._db.execute(sql, {"limit": limit, "offset": offset}).mappings().all()
         return [
-            {"key": str(r["key"]), "cnt": int(r["cnt"]) }
+            AggregationResultEntity(category=str(r["key"]), count=int(r["cnt"]))
             for r in rows
             if r["key"] is not None
         ]

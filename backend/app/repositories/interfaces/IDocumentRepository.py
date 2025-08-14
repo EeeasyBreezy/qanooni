@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
 
 from app.repositories.entities.DocumentEntity import DocumentEntity
 
@@ -38,18 +39,18 @@ class IDocumentRepository(ABC):
 
     # Segregated aggregation methods
     @abstractmethod
-    def count_by_agreement_type(self) -> Dict[str, int]:
-        """Returns counts grouped by agreement_type as a mapping of value -> count."""
+    def count_by_agreement_type(self) -> List[AggregationResultEntity]:
+        """Returns a list of AggregationResultEntity grouped by agreement_type."""
         raise NotImplementedError
 
     @abstractmethod
-    def count_by_country(self) -> Dict[str, int]:
-        """Returns counts grouped by jurisdiction (country) as a mapping of value -> count."""
+    def count_by_country(self) -> List[AggregationResultEntity]:
+        """Returns a list of AggregationResultEntity grouped by jurisdiction (country)."""
         raise NotImplementedError
 
     @abstractmethod
-    def count_by_industry(self, *, limit: int = 10, offset: int = 0) -> List[Dict[str, int]]:
-        """Returns a list of {"key": str, "cnt": int} sorted by count desc with pagination."""
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResultEntity]:
+        """Returns a list of AggregationResultEntity sorted by count with pagination. sort: 'asc' | 'desc'."""
         raise NotImplementedError
 
 
