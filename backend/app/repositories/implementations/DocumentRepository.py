@@ -7,8 +7,6 @@ from sqlalchemy.orm import Session
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 
-
-
 class DocumentRepository(IDocumentRepository):
     def __init__(self, db: Session):
         self._db = db
