@@ -25,7 +25,7 @@ const error = (status: ApiStatusCode) =>
     HttpResponse.json({ message: 'Failed' }, { status })
   );
 
-export const dashboardHandlers = {
+export const handlers = {
   default: success,
   loading,
   error,

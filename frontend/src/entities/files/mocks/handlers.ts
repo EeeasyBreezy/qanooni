@@ -17,7 +17,7 @@ const error = (status: ApiStatusCode) =>
     HttpResponse.json({ message: 'Upload failed' }, { status })
   );
 
-export const filesHandlers = {
+export const handlers = {
   default: success,
   loading,
   error,

@@ -25,7 +25,7 @@ const error = (status: ApiStatusCode) =>
     HttpResponse.json({ message: 'Search failed' }, { status })
   );
 
-export const searchHandlers = {
+export const handlers = {
   default: success,
   loading,
   error,

@@ -1,7 +1,7 @@
 import { setupWorker } from 'msw/browser';
-import { dashboardHandlers } from './handlers/dashboardHandlers';
-import { filesHandlers } from './handlers/filesHandlers';
-import { searchHandlers } from './handlers/searchHandlers';
+import { handlers as dashboardHandlers } from '@entities/dashboardStats/mocks/handlers';
+import { handlers as filesHandlers } from '@entities/files/mocks/handlers';
+import { handlers as searchHandlers } from '@entities/search/mocks/handlers';
 
 export const worker = setupWorker(
   dashboardHandlers.default,
