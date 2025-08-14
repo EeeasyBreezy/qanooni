@@ -3,3 +3,10 @@
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
+4:17:36 PM [vite] page reload src/main.tsx
+4:17:36 PM [vite] ✨ new dependencies optimized: @tanstack/react-query-devtools
+4:17:36 PM [vite] ✨ optimized dependencies changed. reloading
+4:17:39 PM [vite] page reload src/main.tsx
+4:17:39 PM [vite] page reload src/main.tsx
+4:17:40 PM [vite] page reload src/main.tsx
+4:17:40 PM [vite] page reload src/main.tsx
