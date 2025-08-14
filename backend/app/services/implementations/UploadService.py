@@ -1,3 +1,4 @@
+import json
 from typing import List
 from app.common.ContentTypes import ContentType
 from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
@@ -34,7 +35,7 @@ class UploadService(IUploadService):
                     agreement_type=metadata.agreement_type,
                     jurisdiction=metadata.jurisdiction,
                     industry=metadata.industry,
-                    geography_json=None,
+                    geography_json=json.dumps(metadata.geography_mentioned or []),
                 )
             )
 
