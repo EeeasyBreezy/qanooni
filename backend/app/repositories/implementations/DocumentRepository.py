@@ -1,7 +1,8 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import text
+from sqlalchemy import func, text
+from app.common.model.Pagination import Pagination
 from sqlalchemy.orm import Session
 
 from app.repositories.entities.DocumentEntity import DocumentEntity
@@ -66,8 +67,7 @@ class DocumentRepository(IDocumentRepository):
             q = q.filter(DocumentEntity.jurisdiction == jurisdiction)
         if agreement_type:
             q = q.filter(DocumentEntity.agreement_type == agreement_type)
-        q = q.limit(limit).offset(offset)
-        docs = q.all()
+        docs = q.limit(limit).offset(offset).all()
         return [
             {
                 "id": d.id,
@@ -111,7 +111,7 @@ class DocumentRepository(IDocumentRepository):
             if r["key"] is not None
         ]
 
-    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResultEntity]:
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> Pagination[AggregationResultEntity]:
         sort_dir = "ASC" if (str(sort).lower() == "asc") else "DESC"
         sql = text(
             f"""
@@ -123,10 +123,15 @@ class DocumentRepository(IDocumentRepository):
             """
         )
         rows = self._db.execute(sql, {"limit": limit, "offset": offset}).mappings().all()
-        return [
+        items = [
             AggregationResultEntity(category=str(r["key"]), count=int(r["cnt"]))
             for r in rows
             if r["key"] is not None
         ]
+        total_row = self._db.execute(
+            text("SELECT COUNT(DISTINCT industry) AS total FROM documents")
+        ).mappings().first()
+        total = int(total_row["total"]) if total_row else 0
+        return Pagination(items=items, offset=offset, limit=limit, total=total)
 
 

@@ -7,6 +7,7 @@ from app.dependencies import get_document_stats_service
 from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
 from app.services.interfaces.IDocumentStatsService import IDocumentStatsService
 from app.routes.dto.AggregationResultDTO import AggregationResultDTO
+from app.routes.dto.PaginationDTO import PaginationDTO
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -32,16 +33,19 @@ def get_country_counts(service: IDocumentStatsService = Depends(get_document_sta
     return [AggregationResultDTO(category=r.category, count=r.count) for r in service.get_country_counts()]
 
 
-@router.get("/industries", response_model=List[AggregationResultDTO])
+@router.get("/industries", response_model=PaginationDTO[AggregationResultDTO])
 def get_industry_counts(
     service: IDocumentStatsService = Depends(get_document_stats_service),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     sort: str = Query("desc", pattern="^(?i)(asc|desc)$"),
-) -> List[AggregationResultDTO]:
-    return [
-        AggregationResultDTO(category=r.category, count=r.count)
-        for r in service.get_industry_counts(limit=limit, offset=offset, sort=sort)
-    ]
+) -> PaginationDTO[AggregationResultDTO]:
+    page = service.get_industry_counts(limit=limit, offset=offset, sort=sort)
+    return PaginationDTO[AggregationResultDTO](
+        items=[AggregationResultDTO(category=r.category, count=r.count) for r in page.items],
+        offset=page.offset,
+        limit=page.limit,
+        total=page.total,
+    )
 
 

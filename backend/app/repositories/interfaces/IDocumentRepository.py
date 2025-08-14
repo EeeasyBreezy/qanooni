@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
 
 from app.repositories.entities.DocumentEntity import DocumentEntity
+from app.common.model.Pagination import Pagination
 
 
 class IDocumentRepository(ABC):
@@ -49,8 +50,8 @@ class IDocumentRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResultEntity]:
-        """Returns a list of AggregationResultEntity sorted by count with pagination. sort: 'asc' | 'desc'."""
+    def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> Pagination[AggregationResultEntity]:
+        """Returns a paginated list of AggregationResultEntity sorted by count. sort: 'asc' | 'desc'."""
         raise NotImplementedError
 
 

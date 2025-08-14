@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
+from app.common.model.Pagination import Pagination
 
 from app.services.model.AggregationResult import AggregationResult
 
@@ -14,7 +15,7 @@ class IDocumentStatsService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_industry_counts(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResult]:
+    def get_industry_counts(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> Pagination[AggregationResult]:
         raise NotImplementedError
 
 

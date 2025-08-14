@@ -2,6 +2,7 @@ from typing import List
 
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
+from app.common.model.Pagination import Pagination
 from app.services.interfaces.IDocumentStatsService import IDocumentStatsService
 from app.services.model.AggregationResult import AggregationResult
 
@@ -21,8 +22,13 @@ class DocumentStatsService(IDocumentStatsService):
         rows = self._repo.count_by_country()
         return [self._map_entity(r) for r in rows]
 
-    def get_industry_counts(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> List[AggregationResult]:
-        rows = self._repo.count_by_industry(limit=limit, offset=offset, sort=sort)
-        return [self._map_entity(r) for r in rows]
+    def get_industry_counts(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> Pagination[AggregationResult]:
+        page = self._repo.count_by_industry(limit=limit, offset=offset, sort=sort)
+        return Pagination(
+            items=[self._map_entity(r) for r in page.items],
+            offset=page.offset,
+            limit=page.limit,
+            total=page.total,
+        )
 
 
