@@ -39,11 +39,14 @@ def get_metadata_extractor() -> IMetadataExtractor:
 
 
 def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
-    repository = DocumentRepository(db)
+    # Inject a repository factory so background worker can create repos with fresh Sessions
+    def repository_factory(s: Session) -> DocumentRepository:
+        return DocumentRepository(s)
+
     return UploadService(
         textExtractor=get_text_extractor(),
         metadataExtractor=get_metadata_extractor(),
-        repository=repository,
+        repository_factory=repository_factory,
     )
 
 

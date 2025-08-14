@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import List, Optional, Callable
 import queue
 import threading
 import uuid
@@ -10,14 +10,22 @@ from app.services.interfaces.IUploadService import IUploadService
 from app.services.model.File import File
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
+from app.db import session_scope
+from sqlalchemy.orm import Session
 from app.notifications import publish_done
 
 
 class UploadService(IUploadService):
-    def __init__(self, textExtractor: ITextExtractor, metadataExtractor: IMetadataExtractor, repository: IDocumentRepository):
+    def __init__(
+        self,
+        textExtractor: ITextExtractor,
+        metadataExtractor: IMetadataExtractor,
+        repository_factory: Callable[[Session], IDocumentRepository],
+    ):
         self._text_extractor = textExtractor
         self._metadata_extractor = metadataExtractor
-        self._repository = repository
+        # Repository factory allows creating a repository bound to a fresh Session per background job
+        self._repository_factory = repository_factory
         self._queue: "queue.Queue[File]" = queue.Queue(maxsize=1000)
         self._worker = threading.Thread(target=self._consume_loop, daemon=True)
         self._worker.start()
@@ -54,8 +62,11 @@ class UploadService(IUploadService):
                         industry=metadata.industry,
                         geography_json=json.dumps(metadata.geography_mentioned or []),
                     )
-                    self._repository.bulk_create_documents([entity])
-                    # Notify completion (uses generated or provided request_id string)
+                    # Persist using a new session for the background thread
+                    with session_scope() as s:
+                        repo = self._repository_factory(s)
+                        repo.bulk_create_documents([entity])
+
                     try:
                         publish_done(entity.file_name, "processed")
                     except Exception:
