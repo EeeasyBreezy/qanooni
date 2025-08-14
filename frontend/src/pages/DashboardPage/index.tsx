@@ -20,7 +20,7 @@ export function DashboardPage() {
   ] as const;
 
   return (
-    <PageContainer>
+    <PageContainer isLoading={isLoading} error={isError ? 'Error loading dashboard data' : undefined}>
       <Typography variant="h4" component="h1" gutterBottom>
         Dashboard
       </Typography>
