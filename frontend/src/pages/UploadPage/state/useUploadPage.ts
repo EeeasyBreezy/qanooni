@@ -45,6 +45,7 @@ export const useUploadPage = () => {
     try {
         await upload({
           file: file,
+          request_id: fileId,
           onProgress: (p) =>
             setState((prev) => {
               const existing = prev.byId[fileId];

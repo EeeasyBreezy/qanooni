@@ -9,6 +9,7 @@ export const uploadFile = async (
 ): Promise<UploadResponseDTO> => {
   const form = new FormData();
   form.append('file', payload.file);
+  form.append('request_id', payload.request_id);
 
   return httpClient.post<UploadResponseDTO>(filesApiPaths.root, form, {
     // Let Axios set the proper multipart boundary automatically

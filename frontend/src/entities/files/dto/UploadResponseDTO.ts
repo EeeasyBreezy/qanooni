@@ -1,5 +1,5 @@
 export type UploadResponseDTO = {
-  result: number[];
+  request_id: number;
 };
 
 
