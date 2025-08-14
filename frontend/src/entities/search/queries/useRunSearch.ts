@@ -3,13 +3,17 @@ import { runSearch } from '../api';
 import type { SearchRequestDTO } from '../dto/SearchDTO';
 import { mapSearchResultDtoToModel } from '../model/mapping/searchMapper';
 
-export const useRunSearch = () => {
-  return useMutation({
+export const useRunSearch = () =>
+  useMutation({
     mutationFn: async (payload: SearchRequestDTO) => {
-      const rows = await runSearch(payload);
-      return mapSearchResultDtoToModel(rows);
+      const res = await runSearch(payload);
+      return {
+        items: mapSearchResultDtoToModel(res.items),
+        limit: res.limit,
+        offset: res.offset,
+        total: res.total,
+      };
     },
   });
-};
 
 

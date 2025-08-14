@@ -1,7 +1,7 @@
 export type SearchRequestDTO = {
   question: string;
-  limit?: number;
-  offset?: number;
+  limit: number;
+  offset: number;
 };
 
 export type SearchResultRowDTO = {
@@ -10,6 +10,13 @@ export type SearchResultRowDTO = {
   agreement_type: string | null;
   industry: string | null;
   score: number | null;
+};
+
+export type SearchResponseDTO = {
+  items: SearchResultRowDTO[];
+  limit: number;
+  offset: number;
+  total: number;
 };
 
 

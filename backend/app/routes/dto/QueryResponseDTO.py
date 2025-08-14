@@ -8,5 +8,3 @@ class QueryResponseDTO(BaseModel):
     limit: int
     offset: int
     total: int
-
-
