@@ -8,3 +8,10 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     127.0.0.1:63537 - "GET /docs HTTP/1.1" 200 OK
 INFO:     127.0.0.1:63537 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55612 - "POST /api/upload HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55710 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55710 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55710 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55766 - "POST /api/upload HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55772 - "POST /api/upload HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55778 - "POST /api/upload HTTP/1.1" 404 Not Found

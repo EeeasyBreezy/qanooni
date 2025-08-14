@@ -54,6 +54,8 @@ export const useUploadPage = () => {
       });
       return { byId: nextById, order: [...newIds, ...prev.order] };
     });
+
+    newIds.forEach((id) => void startUpload(id));
   };
 
   const startUpload = async (itemId: string) => {
