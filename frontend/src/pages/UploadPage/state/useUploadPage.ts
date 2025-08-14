@@ -24,27 +24,42 @@ type UploadItemsState = {
 };
 
 export const useUploadPage = () => {
-  const [state, setState] = React.useState<UploadItemsState>({ byId: {}, order: [] });
+  const [state, setState] = React.useState<UploadItemsState>({
+    byId: {},
+    order: [],
+  });
   const { mutateAsync: upload } = useUploadFiles();
   const allowedTypes = [ContentTypes.pdf, ContentTypes.docx];
 
   const addFiles = React.useCallback((files: FileList | null) => {
     if (!files) return;
     const newItems: UploadItem[] = Array.from(files)
-      .filter((f) => allowedTypes.includes(f.type) || /\.pdf$/i.test(f.name) || /\.docx$/i.test(f.name))
+      .filter(
+        (f) =>
+          allowedTypes.includes(f.type) ||
+          /\.pdf$/i.test(f.name) ||
+          /\.docx$/i.test(f.name)
+      )
       .map((f) => ({
         id: `${f.name}-${Date.now()}-${Math.random()}`,
         file: f,
         status: "idle" as const,
         progress: 0,
       }));
+    const newIds = newItems.map((i) => i.id);
     setState((prev) => {
       const nextById = { ...prev.byId } as Record<string, UploadItem>;
-      const newIds = newItems.map((i) => {
+      newItems.forEach((i) => {
         nextById[i.id] = i;
-        return i.id;
       });
       return { byId: nextById, order: [...newIds, ...prev.order] };
+    });
+    // Start uploads immediately for newly added files
+    newIds.forEach((id) => {
+      // Defer to ensure state update is applied
+      setTimeout(() => {
+        void startUpload(id);
+      }, 0);
     });
   }, []);
 
@@ -73,15 +88,26 @@ export const useUploadPage = () => {
             setState((prev) => {
               const existing = prev.byId[itemId];
               if (!existing) return prev;
-              return { byId: { ...prev.byId, [itemId]: { ...existing, progress: p } }, order: prev.order };
+              return {
+                byId: { ...prev.byId, [itemId]: { ...existing, progress: p } },
+                order: prev.order,
+              };
             }),
           signal: controller.signal,
         });
         setState((prev) => {
           const existing = prev.byId[itemId];
           if (!existing) return prev;
-          const updated: UploadItem = { ...existing, status: "success", progress: 100, abortController: undefined };
-          return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
+          const updated: UploadItem = {
+            ...existing,
+            status: "success",
+            progress: 100,
+            abortController: undefined,
+          };
+          return {
+            byId: { ...prev.byId, [itemId]: updated },
+            order: prev.order,
+          };
         });
       } catch (e: any) {
         setState((prev) => {
@@ -93,7 +119,10 @@ export const useUploadPage = () => {
             errorMessage: e?.message ?? "Upload failed",
             abortController: undefined,
           };
-          return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
+          return {
+            byId: { ...prev.byId, [itemId]: updated },
+            order: prev.order,
+          };
         });
       }
     },
@@ -107,7 +136,10 @@ export const useUploadPage = () => {
       setState((prev) => {
         const cur = prev.byId[itemId];
         if (!cur) return prev;
-        return { byId: { ...prev.byId, [itemId]: { ...cur, status: "aborted" } }, order: prev.order };
+        return {
+          byId: { ...prev.byId, [itemId]: { ...cur, status: "aborted" } },
+          order: prev.order,
+        };
       });
     },
     [state.byId]
@@ -130,7 +162,11 @@ export const useUploadPage = () => {
     });
   }, []);
 
-  const rows: UploadItem[] = React.useMemo(() => state.order.map((id) => state.byId[id]).filter(Boolean) as UploadItem[], [state]);
+  const rows: UploadItem[] = React.useMemo(
+    () =>
+      state.order.map((id) => state.byId[id]).filter(Boolean) as UploadItem[],
+    [state]
+  );
 
   return {
     items: rows,
