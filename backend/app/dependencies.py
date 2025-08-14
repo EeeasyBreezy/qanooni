@@ -11,6 +11,7 @@ from app.services.implementations.MetadataExtractor import MetadataExtractor
 from app.services.implementations.UploadService import UploadService
 from app.repositories.implementations.DocumentRepository import DocumentRepository
 from app.services.implementations.DocumentStatsService import DocumentStatsService
+from app.services.implementations.DocumentQueryService import DocumentQueryService
 
 from app.services.interfaces.IImageProcessor import IImageProcessor
 from app.services.interfaces.IOCR import IOCR
@@ -18,6 +19,7 @@ from app.services.interfaces.ITextExtractor import ITextExtractor
 from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.IUploadService import IUploadService
 from app.services.interfaces.IDocumentStatsService import IDocumentStatsService
+from app.services.interfaces.IDocumentQueryService import IDocumentQueryService
 
 
 @lru_cache(maxsize=1)
@@ -55,4 +57,9 @@ def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
 def get_document_stats_service(db: Session = Depends(get_db)) -> IDocumentStatsService:
     repo = DocumentRepository(db)
     return DocumentStatsService(repo)
+
+
+def get_document_query_service(db: Session = Depends(get_db)) -> IDocumentQueryService:
+    repo = DocumentRepository(db)
+    return DocumentQueryService(repo)
 

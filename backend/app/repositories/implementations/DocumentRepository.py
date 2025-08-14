@@ -31,7 +31,7 @@ class DocumentRepository(IDocumentRepository):
         agreement_type: Optional[str],
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
+    ) -> Pagination[Dict[str, Any]]:
         if fts_query and self._db.bind and self._db.bind.dialect.name == "sqlite":
             sql = text(
                 """
@@ -56,7 +56,26 @@ class DocumentRepository(IDocumentRepository):
                     "offset": offset,
                 },
             ).mappings().all()
-            return [dict(r) for r in rows]
+            total_sql = text(
+                """
+                SELECT COUNT(*) AS total
+                FROM documents d
+                JOIN doc_fts ON doc_fts.rowid = d.id
+                WHERE doc_fts MATCH :fts_query
+                  AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
+                  AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
+                """
+            )
+            total_row = self._db.execute(
+                total_sql,
+                {
+                    "fts_query": fts_query,
+                    "jurisdiction": jurisdiction,
+                    "agreement_type": agreement_type,
+                },
+            ).mappings().first()
+            total = int(total_row["total"]) if total_row else 0
+            return Pagination(items=[dict(r) for r in rows], offset=offset, limit=limit, total=total)
 
         # Fallback LIKE search or no fts_query
         q = self._db.query(DocumentEntity)
@@ -67,8 +86,9 @@ class DocumentRepository(IDocumentRepository):
             q = q.filter(DocumentEntity.jurisdiction == jurisdiction)
         if agreement_type:
             q = q.filter(DocumentEntity.agreement_type == agreement_type)
+        total = q.order_by(None).count()
         docs = q.limit(limit).offset(offset).all()
-        return [
+        return Pagination(items=[
             {
                 "id": d.id,
                 "file_name": d.file_name,
@@ -78,7 +98,9 @@ class DocumentRepository(IDocumentRepository):
                 "rank": None,
             }
             for d in docs
-        ]
+        ], offset=offset, limit=limit, total=total)
+
+    # count_search merged into search; removing separate method
         
     def count_by_agreement_type(self) -> List[AggregationResultEntity]:
         sql = text("SELECT agreement_type AS key, COUNT(*) AS cnt FROM documents GROUP BY agreement_type")

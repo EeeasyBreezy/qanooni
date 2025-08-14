@@ -4,6 +4,7 @@ from app.repositories.entities.AggregationResultEntity import AggregationResultE
 
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.common.model.Pagination import Pagination
+from app.common.model.Pagination import Pagination
 
 
 class IDocumentRepository(ABC):
@@ -29,8 +30,8 @@ class IDocumentRepository(ABC):
         agreement_type: Optional[str],
         limit: int = 50,
         offset: int = 0,
-    ) -> List[Dict[str, Any]]:
-        """Full-text search joined with optional metadata filters."""
+    ) -> Pagination[Dict[str, Any]]:
+        """Full-text search joined with optional metadata filters, returns paginated items + total count."""
         raise NotImplementedError
 
     # Segregated aggregation methods
