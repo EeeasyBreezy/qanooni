@@ -58,3 +58,4 @@ INFO:     Waiting for application startup.
 /Users/alex.gavrilov/Desktop/Projects/fast-api-react/backend/app/repositories/entities/DocumentEntity.py:10: SAWarning: This declarative base already contains a class with the same class name and module name as app.repositories.entities.DocumentEntity.DocumentEntity, and will be replaced in the string-lookup table.
   class DocumentEntity(Base):
 INFO:     Application startup complete.
+INFO:     127.0.0.1:58179 - "POST /api/upload HTTP/1.1" 200 OK

@@ -1,22 +1,8 @@
 import React from "react";
 import { useUploadFiles } from "@entities/files/queries/useUploadFiles";
 import { ContentTypes } from "@shared/consts/ContentTypes";
-
-export type UploadStatus =
-  | "idle"
-  | "uploading"
-  | "success"
-  | "error"
-  | "aborted";
-
-export type UploadItem = {
-  id: string;
-  file: File;
-  status: UploadStatus;
-  progress: number;
-  errorMessage?: string;
-  abortController?: AbortController;
-};
+import { UploadItem } from "../model/UploadItem";
+import { mapFileListToUploadItemList } from "../mapping/mapFileListToUploadItemList";
 
 type UploadItemsState = {
   byId: Record<string, UploadItem>;
@@ -33,20 +19,15 @@ export const useUploadPage = () => {
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
-    const newItems: UploadItem[] = Array.from(files)
-      .filter(
-        (f) =>
-          allowedTypes.includes(f.type) ||
-          /\.pdf$/i.test(f.name) ||
-          /\.docx$/i.test(f.name)
-      )
-      .map((f) => ({
-        id: `${f.name}-${Date.now()}-${Math.random()}`,
-        file: f,
-        status: "idle" as const,
-        progress: 0,
-      }));
+
+    const newItems = mapFileListToUploadItemList(files).filter(
+        (i) =>
+          allowedTypes.includes(i.file.type) ||
+          /\.pdf$/i.test(i.file.name) ||
+          /\.docx$/i.test(i.file.name)
+      );
     const newIds = newItems.map((i) => i.id);
+
     setState((prev) => {
       const nextById = { ...prev.byId } as Record<string, UploadItem>;
       newItems.forEach((i) => {
@@ -63,8 +44,11 @@ export const useUploadPage = () => {
     const controller = new AbortController();
     setState((prev) => {
       const existing = prev.byId[itemId];
+
       if (!existing) return prev;
+
       fileToUpload = existing.file;
+
       const updated: UploadItem = {
         ...existing,
         status: "uploading",
@@ -72,9 +56,12 @@ export const useUploadPage = () => {
         errorMessage: undefined,
         abortController: controller,
       };
+
       return { byId: { ...prev.byId, [itemId]: updated }, order: prev.order };
     });
+
     if (!fileToUpload) return;
+    
     try {
       await upload({
         file: fileToUpload,
