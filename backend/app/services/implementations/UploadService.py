@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Optional
 import queue
 import threading
 import uuid
@@ -10,6 +10,7 @@ from app.services.interfaces.IUploadService import IUploadService
 from app.services.model.File import File
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
+from app.notifications import publish_done
 
 
 class UploadService(IUploadService):
@@ -21,12 +22,12 @@ class UploadService(IUploadService):
         self._worker = threading.Thread(target=self._consume_loop, daemon=True)
         self._worker.start()
 
-    def upload_files(self, files: List[File]) -> List[int]:
-        request_ids: List[int] = []
-        for f in files:
+    def upload_files(self, files: List[File]) -> List[str]:
+        out: List[str] = []
+        for idx, f in enumerate(files):
             self._queue.put(f)
-            request_ids.append(uuid.uuid4().int >> 64)
-        return request_ids
+            out.append(f.request_id)
+        return out
     
     def _extract_text(self, file: File) -> str:
         if file.mime_type == ContentType.pdf:
@@ -54,6 +55,11 @@ class UploadService(IUploadService):
                         geography_json=json.dumps(metadata.geography_mentioned or []),
                     )
                     self._repository.bulk_create_documents([entity])
+                    # Notify completion (uses generated or provided request_id string)
+                    try:
+                        publish_done(entity.file_name, "processed")
+                    except Exception:
+                        pass
                 finally:
                     self._queue.task_done()
             except Exception:

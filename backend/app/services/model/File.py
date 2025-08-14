@@ -7,3 +7,4 @@ class File:
     mime_type: str
     size_bytes: int
     content: bytes
+    request_id: str

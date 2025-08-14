@@ -15,12 +15,14 @@ app.add_middleware(
 
 from app.routes.controllers import upload
 from app.routes.controllers import query, dashboard
+from app.routes.controllers import notifications
 
 # Central API router with /api prefix
 api = APIRouter(prefix="/api")
 api.include_router(upload.router)
 api.include_router(query.router)
 api.include_router(dashboard.router)
+api.include_router(notifications.router)
 
 app.include_router(api)
 
