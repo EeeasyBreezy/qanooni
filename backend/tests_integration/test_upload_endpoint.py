@@ -7,7 +7,7 @@ from tests_integration.client.http_client import ApiClient, HttpError
 
 
 BASE_URL = os.getenv("IT_BASE_URL", "http://127.0.0.1:8000")
-ASSETS_DIR = Path(__file__).resolve().parents[1] / "tests" / "app" / "services" / "files"
+ASSETS_DIR = Path(__file__).resolve().parent / "files"
 
 
 class TestUploadEndpoint:
@@ -20,7 +20,7 @@ class TestUploadEndpoint:
         self.client.upload_file(filepath=pdf_path, request_id=str(uuid.uuid4()))
 
     def test_upload_valid_docx(self) -> None:
-        docx_path = str(ASSETS_DIR / "word.docx")
+        docx_path = str(ASSETS_DIR / "docx.docx")
         self.client.upload_file(filepath=docx_path, request_id=str(uuid.uuid4()))
 
     def test_upload_pdf_with_images(self) -> None:
@@ -61,5 +61,34 @@ class TestUploadEndpoint:
                 file_tuple={"name": "file", "filename": "fake.docx", "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "content": b"not a real docx"},
             )
         assert exc2.value.status == 400
+        
+    def test_upload_unsupported_valid_formats(self) -> None:
+        # Valid JPEG header but unsupported format
+        jpeg_bytes = b"\xFF\xD8\xFF\xE0" + b"\x00" * 100
+        with pytest.raises(HttpError) as exc_jpeg:
+            self.client.upload_malformed(
+                fields={"request_id": str(uuid.uuid4())},
+                file_tuple={
+                    "name": "file",
+                    "filename": "image.jpg",
+                    "content_type": "image/jpeg",
+                    "content": jpeg_bytes,
+                },
+            )
+        assert exc_jpeg.value.status == 400
+
+        # Valid legacy .doc header (OLE Compound File) but unsupported format
+        doc_bytes = b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1" + b"\x00" * 100
+        with pytest.raises(HttpError) as exc_doc:
+            self.client.upload_malformed(
+                fields={"request_id": str(uuid.uuid4())},
+                file_tuple={
+                    "name": "file",
+                    "filename": "legacy.doc",
+                    "content_type": "application/msword",
+                    "content": doc_bytes,
+                },
+            )
+        assert exc_doc.value.status == 400
 
 
