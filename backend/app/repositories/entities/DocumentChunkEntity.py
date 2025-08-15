@@ -21,9 +21,9 @@ class DocumentChunkEntity(Base):
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # Embedding vector (nullable until embeddings are computed). Use Vector(1536) if available.
+    # Embedding vector (nullable until embeddings are computed). Dimension set for all-MiniLM-L6-v2 (384).
     if Vector is not None:
-        embedding = mapped_column(Vector(1536), nullable=True)  # type: ignore
+        embedding = mapped_column(Vector(384), nullable=True)  # type: ignore
     else:
         # Fallback to Text to keep schema creatable without pgvector installed
         embedding = mapped_column(Text, nullable=True)  # type: ignore

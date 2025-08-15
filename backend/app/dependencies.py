@@ -9,6 +9,8 @@ from app.services.implementations.OCRService import OCRService
 from app.services.implementations.TextExtractor import TextExtractor
 from app.services.implementations.MetadataExtractor import MetadataExtractor
 from app.services.implementations.UploadService import UploadService
+from app.services.implementations.TextChunker import TextChunker
+from app.services.implementations.LocalEmbeddingService import LocalEmbeddingService
 from app.repositories.implementations.DocumentRepository import DocumentRepository
 from app.services.implementations.DocumentStatsService import DocumentStatsService
 from app.services.implementations.DocumentQueryService import DocumentQueryService
@@ -42,6 +44,11 @@ def get_metadata_extractor() -> IMetadataExtractor:
     return MetadataExtractor()
 
 
+@lru_cache(maxsize=1)
+def get_embedding_service() -> LocalEmbeddingService:
+    return LocalEmbeddingService()
+
+
 def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
     # Inject a repository factory so background worker can create repos with fresh Sessions
     def repository_factory(s: Session) -> DocumentRepository:
@@ -51,6 +58,8 @@ def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
         textExtractor=get_text_extractor(),
         metadataExtractor=get_metadata_extractor(),
         repository_factory=repository_factory,
+        chunker=TextChunker(max_tokens=1000, overlap=200),
+        embeddings=get_embedding_service(),
     )
 
 

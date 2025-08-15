@@ -6,6 +6,8 @@ from app.common.ContentTypes import ContentType
 from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.ITextExtractor import ITextExtractor
 from app.services.interfaces.IUploadService import IUploadService
+from app.services.interfaces.ITextChunker import ITextChunker
+from app.services.interfaces.IEmbeddingService import IEmbeddingService
 from app.services.model.File import File
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
@@ -21,32 +23,21 @@ class UploadService(IUploadService):
         textExtractor: ITextExtractor,
         metadataExtractor: IMetadataExtractor,
         repository_factory: Callable[[Session], IDocumentRepository],
+        chunker: ITextChunker,
+        embeddings: IEmbeddingService,
     ):
         self._text_extractor = textExtractor
         self._metadata_extractor = metadataExtractor
         # Repository factory allows creating a repository bound to a fresh Session per background job
         self._repository_factory = repository_factory
+        self._chunker = chunker
+        self._embeddings = embeddings
         self._queue: "queue.Queue[File]" = queue.Queue(maxsize=1000)
         self._worker = threading.Thread(target=self._consume_loop, daemon=True)
         self._worker.start()
 
-    def _chunk_text(self, text: str, *, max_tokens: int = 1000, overlap: int = 200) -> List[str]:
-        # Simple whitespace-based chunking by approximate token count
-        if max_tokens <= 0:
-            return [text]
-        words = text.split()
-        if not words:
-            return []
-        chunks: List[str] = []
-        start = 0
-        step = max(1, max_tokens - overlap)
-        while start < len(words):
-            end = min(len(words), start + max_tokens)
-            chunk = " ".join(words[start:end]).strip()
-            if chunk:
-                chunks.append(chunk)
-            start += step
-        return chunks
+    def _chunk_text(self, text: str) -> List[str]:
+        return self._chunker.chunk(text)
 
     def upload_files(self, files: List[File]) -> List[str]:
         out: List[str] = []
@@ -86,16 +77,26 @@ class UploadService(IUploadService):
                         repo.bulk_create_documents([entity])
                         # Create chunks for semantic retrieval (embeddings populated later)
                         chunks_text = self._chunk_text(text)
-                        chunks = [
-                            DocumentChunkEntity(
-                                document_id=int(entity.id),
-                                chunk_index=idx,
-                                content=chunk_text,
-                            )
-                            for idx, chunk_text in enumerate(chunks_text)
-                        ]
-                        if chunks:
-                            repo.bulk_create_document_chunks(chunks)
+                        chunks_entities: List[DocumentChunkEntity] = []
+                        if chunks_text:
+                            # Compute embeddings locally for each chunk
+                            vectors = self._embeddings.embed_texts(chunks_text)
+                            for idx, (chunk_text, vec) in enumerate(zip(chunks_text, vectors)):
+                                dc = DocumentChunkEntity(
+                                    document_id=int(entity.id),
+                                    chunk_index=idx,
+                                    content=chunk_text,
+                                )
+                                # Assign embedding when numeric vector returned
+                                try:
+                                    # pgvector as TEXT fallback in SQLite; store JSON string there
+                                    if hasattr(dc, "embedding"):
+                                        dc.embedding = vec  # type: ignore
+                                except Exception:
+                                    pass
+                                chunks_entities.append(dc)
+                        if chunks_entities:
+                            repo.bulk_create_document_chunks(chunks_entities)
 
                     try:
                         # Use the upload request id as the notification channel key
