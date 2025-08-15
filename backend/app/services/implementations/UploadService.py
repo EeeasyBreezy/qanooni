@@ -15,6 +15,7 @@ from app.db import session_scope
 from sqlalchemy.orm import Session
 from app.notifications import publish_done
 from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
+from app.services.model.DocumentMetadata import DocumentMetadata
 
 
 class UploadService(IUploadService):
@@ -53,6 +54,28 @@ class UploadService(IUploadService):
             return self._text_extractor.parse_docx(file.content)
         else:
             raise ValueError(f"Unsupported file type: {file.mime_type}")
+        
+    def _get_chuncks(self, text: str, doc_id: int) -> List[DocumentChunkEntity]:
+        chunks_text = self._chunk_text(text)
+        vectors = self._embeddings.embed_texts(chunks_text)
+        return [DocumentChunkEntity(
+            document_id=doc_id,
+            chunk_index=idx,
+            content=chunk_text,
+            embedding=vec,
+        ) for idx, (chunk_text, vec) in enumerate(zip(chunks_text, vectors))]
+        
+    def _get_doc_entity(self, file: File, text: str, metadata: DocumentMetadata) -> DocumentEntity:
+        return DocumentEntity(
+            file_name=file.file_name,
+            mime_type=file.mime_type,
+            size_bytes=file.size_bytes,
+            text=text,
+            agreement_type=metadata.agreement_type,
+            jurisdiction=metadata.jurisdiction,
+            industry=metadata.industry,
+            geography_json=json.dumps(metadata.geography_mentioned or []),
+        )
 
     def _consume_loop(self) -> None:
         while True:
@@ -61,36 +84,13 @@ class UploadService(IUploadService):
                 try:
                     text = self._extract_text(f)
                     metadata = self._metadata_extractor.extract_metadata(text)
-                    entity = DocumentEntity(
-                        file_name=f.file_name,
-                        mime_type=f.mime_type,
-                        size_bytes=f.size_bytes,
-                        text=text,
-                        agreement_type=metadata.agreement_type,
-                        jurisdiction=metadata.jurisdiction,
-                        industry=metadata.industry,
-                        geography_json=json.dumps(metadata.geography_mentioned or []),
-                    )
-                    # Persist using a new session for the background thread
+                    entity = self._get_doc_entity(f, text, metadata)
+                    
                     with session_scope() as s:
                         repo = self._repository_factory(s)
                         repo.bulk_create_documents([entity])
-                        # Create chunks for semantic retrieval (embeddings populated later)
-                        chunks_text = self._chunk_text(text)
-                        chunks_entities: List[DocumentChunkEntity] = []
-                        if chunks_text:
-                            # Compute embeddings locally for each chunk
-                            vectors = self._embeddings.embed_texts(chunks_text)
-                            for idx, (chunk_text, vec) in enumerate(zip(chunks_text, vectors)):
-                                dc = DocumentChunkEntity(
-                                    document_id=int(entity.id),
-                                    chunk_index=idx,
-                                    content=chunk_text,
-                                    embedding=vec,
-                                )
-                                chunks_entities.append(dc)
-                        if chunks_entities:
-                            repo.bulk_create_document_chunks(chunks_entities)
+                        chunks_entities: List[DocumentChunkEntity] = self._get_chuncks(text, entity.id)
+                        repo.bulk_create_document_chunks(chunks_entities)
 
                     try:
                         # Use the upload request id as the notification channel key
