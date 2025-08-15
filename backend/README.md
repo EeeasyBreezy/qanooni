@@ -9,6 +9,13 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
+Postgres + pgvector
+
+```
+docker compose up -d postgres
+export DATABASE_URL=postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni
+```
+
 Endpoints:
 - GET /api/health
 - GET /api/greeting?name=YourName

@@ -1,5 +1,5 @@
 import json
-from typing import List, Callable
+from typing import List, Callable, Iterable
 import queue
 import threading
 from app.common.ContentTypes import ContentType
@@ -12,6 +12,7 @@ from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 from app.db import session_scope
 from sqlalchemy.orm import Session
 from app.notifications import publish_done
+from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
 
 
 class UploadService(IUploadService):
@@ -28,6 +29,24 @@ class UploadService(IUploadService):
         self._queue: "queue.Queue[File]" = queue.Queue(maxsize=1000)
         self._worker = threading.Thread(target=self._consume_loop, daemon=True)
         self._worker.start()
+
+    def _chunk_text(self, text: str, *, max_tokens: int = 1000, overlap: int = 200) -> List[str]:
+        # Simple whitespace-based chunking by approximate token count
+        if max_tokens <= 0:
+            return [text]
+        words = text.split()
+        if not words:
+            return []
+        chunks: List[str] = []
+        start = 0
+        step = max(1, max_tokens - overlap)
+        while start < len(words):
+            end = min(len(words), start + max_tokens)
+            chunk = " ".join(words[start:end]).strip()
+            if chunk:
+                chunks.append(chunk)
+            start += step
+        return chunks
 
     def upload_files(self, files: List[File]) -> List[str]:
         out: List[str] = []
@@ -65,6 +84,18 @@ class UploadService(IUploadService):
                     with session_scope() as s:
                         repo = self._repository_factory(s)
                         repo.bulk_create_documents([entity])
+                        # Create chunks for semantic retrieval (embeddings populated later)
+                        chunks_text = self._chunk_text(text)
+                        chunks = [
+                            DocumentChunkEntity(
+                                document_id=int(entity.id),
+                                chunk_index=idx,
+                                content=chunk_text,
+                            )
+                            for idx, chunk_text in enumerate(chunks_text)
+                        ]
+                        if chunks:
+                            repo.bulk_create_document_chunks(chunks)
 
                     try:
                         # Use the upload request id as the notification channel key

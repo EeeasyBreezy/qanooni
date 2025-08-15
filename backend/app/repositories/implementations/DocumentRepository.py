@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
+from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
 
 class DocumentRepository(IDocumentRepository):
     def __init__(self, db: Session):
@@ -22,6 +23,13 @@ class DocumentRepository(IDocumentRepository):
         self._db.add_all(documents)
         self._db.flush()
         return [int(m.id) for m in documents]
+
+    def bulk_create_document_chunks(self, chunks: List[DocumentChunkEntity]) -> List[int]:
+        if not chunks:
+            return []
+        self._db.add_all(chunks)
+        self._db.flush()
+        return [int(c.id) for c in chunks]
 
     def search(
         self,

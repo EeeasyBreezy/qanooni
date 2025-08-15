@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: qanooni-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: qanooni
+      POSTGRES_USER: qanooni
+      POSTGRES_PASSWORD: qanooni
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+    driver: local
+
+

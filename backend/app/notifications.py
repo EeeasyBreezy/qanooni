@@ -2,7 +2,8 @@ import asyncio
 from typing import Dict, Optional
 
 _loop: Optional[asyncio.AbstractEventLoop] = None
-_channels: Dict[str, asyncio.Queue[str]] = {}
+# Avoid parameterizing asyncio.Queue for Python 3.8 compatibility
+_channels: Dict[str, asyncio.Queue] = {}
 
 
 def set_event_loop(loop: asyncio.AbstractEventLoop) -> None:
@@ -10,7 +11,7 @@ def set_event_loop(loop: asyncio.AbstractEventLoop) -> None:
     _loop = loop
 
 
-def get_channel(request_id: str) -> asyncio.Queue[str]:
+def get_channel(request_id: str) -> asyncio.Queue:
     if request_id not in _channels:
         _channels[request_id] = asyncio.Queue(maxsize=10)
     return _channels[request_id]

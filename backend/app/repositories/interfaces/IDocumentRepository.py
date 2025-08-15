@@ -5,6 +5,7 @@ from app.repositories.entities.AggregationResultEntity import AggregationResultE
 from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.common.model.Pagination import Pagination
 from app.common.model.Pagination import Pagination
+from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
 
 
 class IDocumentRepository(ABC):
@@ -48,6 +49,12 @@ class IDocumentRepository(ABC):
     @abstractmethod
     def count_by_industry(self, *, limit: int = 10, offset: int = 0, sort: str = "desc") -> Pagination[AggregationResultEntity]:
         """Returns a paginated list of AggregationResultEntity sorted by count. sort: 'asc' | 'desc'."""
+        raise NotImplementedError
+
+    # Chunk persistence
+    @abstractmethod
+    def bulk_create_document_chunks(self, chunks: List[DocumentChunkEntity]) -> List[int]:
+        """Persists multiple document chunks and returns their IDs."""
         raise NotImplementedError
 
 

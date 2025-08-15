@@ -107,14 +107,30 @@ def init_db() -> None:
     # Reload entity module so its Base binding matches this module's Base
     import importlib
     import app.repositories.entities.DocumentEntity as entity_module  # type: ignore
+    import app.repositories.entities.DocumentChunkEntity as chunk_module  # type: ignore
     try:
         importlib.reload(entity_module)
+        importlib.reload(chunk_module)
     except Exception:
         pass
 
-    # Create tables, then FTS objects
-    Base.metadata.create_all(bind=engine)
-    _ensure_sqlite_fts5_objects()
+    # If Postgres, create extensions BEFORE creating tables that depend on them
+    if engine.dialect.name == "postgresql":
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+                conn.commit()
+        except Exception:
+            # Continue even if extensions cannot be created; deployments may restrict permissions
+            pass
+        # Now create tables
+        Base.metadata.create_all(bind=engine)
+    else:
+        # Create tables for SQLite and others
+        Base.metadata.create_all(bind=engine)
+        # If SQLite, ensure FTS virtual table and triggers exist
+        _ensure_sqlite_fts5_objects()
 
 
 @contextmanager
