@@ -33,17 +33,25 @@ const PieChart: React.FC<Props> = ({
   testId,
 }) => {
   return (
-    <ResponsiveContainer width="100%" height={height} data-testid={testId}>
-      <RPieChart>
-        <Tooltip />
-        <Legend />
-        <Pie data={data} dataKey="value" nameKey="name" outerRadius={90} label>
-          {data.map((_, idx) => (
-            <Cell key={idx} fill={colors[idx % colors.length]} />
-          ))}
-        </Pie>
-      </RPieChart>
-    </ResponsiveContainer>
+    <div data-testid={testId}>
+      <ResponsiveContainer width="100%" height={height}>
+        <RPieChart>
+          <Tooltip />
+          <Legend />
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            outerRadius={90}
+            label
+          >
+            {data.map((_, idx) => (
+              <Cell key={idx} fill={colors[idx % colors.length]} />
+            ))}
+          </Pie>
+        </RPieChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 

@@ -25,15 +25,20 @@ const BarChart: React.FC<Props> = ({
   testId,
 }) => {
   return (
-    <ResponsiveContainer width="100%" height={height} data-testid={testId}>
-      <RBarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis allowDecimals={false} />
-        <Tooltip />
-        <Bar dataKey="value" fill={color} />
-      </RBarChart>
-    </ResponsiveContainer>
+    <div data-testid={testId}>
+      <ResponsiveContainer width="100%" height={height}>
+        <RBarChart
+          data={data}
+          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey="value" fill={color} />
+        </RBarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 

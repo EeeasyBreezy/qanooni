@@ -27,7 +27,7 @@ export const IndustriesTable: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box sx={{ mt: 3 }} data-testid="industries-table">
       <Typography variant="h6" sx={{ mb: 1 }}>
         Industry Coverage
       </Typography>
@@ -50,7 +50,6 @@ export const IndustriesTable: React.FC = () => {
           pageSizeOptions={pageSizeOptions}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={onPaginationModelChange}
-          data-testid="industries-table"
         />
       </Box>
     </Box>
