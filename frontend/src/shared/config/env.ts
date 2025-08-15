@@ -5,6 +5,8 @@ export type AppConfig = {
 
 const viteEnvVariables = (import.meta as any)?.env ?? {};
 
+console.log((import.meta as any).env)
+
 export const config: AppConfig = {
     useMocks: viteEnvVariables.VITE_USE_MOCKS === "enabled",
     baseUrl: viteEnvVariables.VITE_BASE_URL || "/api",

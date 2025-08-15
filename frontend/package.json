@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:mock": "VITE_USE_MOCKS=true vite",
-    "dev:mock:ci": "cross-env VITE_USE_MOCKS=true vite",
+    "dev:mock": "VITE_USE_MOCKS=enabled vite",
+    "dev:mock:ci": "cross-env VITE_USE_MOCKS=enabled vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 5173 --strictPort",
     "lint": "eslint .",

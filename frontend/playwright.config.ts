@@ -78,8 +78,5 @@ export default defineConfig({
     command: 'vite',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
-    env: {
-      VITE_USE_MOCKS: 'true',
-    },
   },
 });
