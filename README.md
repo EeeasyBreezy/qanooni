@@ -31,3 +31,17 @@ This installs deps if needed and runs both servers concurrently:
 - Frontend: `http://127.0.0.1:5173`
 
 
+### Prerequisites
+- Docker and Docker Compose
+- Python 3 (on PATH as `python3` or `python`)
+- Node.js (and optionally Yarn)
+
+### One-command dev (shell choice)
+- Bash/Zsh/Fish (macOS/Linux): run `./dev_up.sh`
+- PowerShell (Windows/macOS): run `./dev_up.ps1`
+
+Both scripts:
+- Auto-create a virtualenv under `backend/.venv`
+- Install backend and frontend dependencies
+- Bring up Postgres with Docker
+- Start backend and frontend and write logs to `backend/backend.log` and `frontend/frontend.log`

@@ -31,7 +31,15 @@ if command -v docker compose >/dev/null 2>&1; then COMPOSE="docker compose"; els
   command -v docker-compose >/dev/null 2>&1 || { echo "[error] docker compose not found"; exit 1; }
   COMPOSE="docker-compose"
 fi
-command -v python3 >/dev/null 2>&1 || { echo "[error] python3 not found"; exit 1; }
+
+# Find a usable Python 3 command
+if command -v python3 >/dev/null 2>&1; then PYTHON=python3
+elif command -v python >/dev/null 2>&1; then PYTHON=python
+elif command -v py >/dev/null 2>&1; then PYTHON="py -3"
+else
+  echo "[error] Python 3 not found. Install it and ensure 'python3' or 'python' is on PATH."; exit 1
+fi
+
 command -v node >/dev/null 2>&1 || { echo "[error] node not found"; exit 1; }
 
 echo "[2/8] Bringing up Postgres"
@@ -49,7 +57,7 @@ done
 export DATABASE_URL="${DATABASE_URL:-postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni}"
 
 echo "[4/8] Backend venv + deps"
-if [[ ! -d "$ROOT_DIR/backend/.venv" ]]; then python3 -m venv "$ROOT_DIR/backend/.venv"; fi
+if [[ ! -d "$ROOT_DIR/backend/.venv" ]]; then $PYTHON -m venv "$ROOT_DIR/backend/.venv"; fi
 # shellcheck source=/dev/null
 source "$ROOT_DIR/backend/.venv/bin/activate"
 pip install --disable-pip-version-check -r "$ROOT_DIR/backend/requirements.txt"
@@ -77,7 +85,7 @@ BACKEND_LOG="$ROOT_DIR/backend/backend.log"
 FRONTEND_LOG="$ROOT_DIR/frontend/frontend.log"
 rm -f "$BACKEND_LOG" "$FRONTEND_LOG" || true
 
-( cd "$ROOT_DIR/backend" && exec uvicorn app.main:app --app-dir "$ROOT_DIR/backend" --port 8000 >"$BACKEND_LOG" 2>&1 ) &
+( cd "$ROOT_DIR/backend" && exec "$ROOT_DIR/backend/.venv/bin/python" -m uvicorn app.main:app --app-dir "$ROOT_DIR/backend" --port 8000 >"$BACKEND_LOG" 2>&1 ) &
 BACKEND_PID=$!
 echo "$BACKEND_PID" > "$BACKEND_PID_FILE"
 

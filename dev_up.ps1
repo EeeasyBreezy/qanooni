@@ -31,7 +31,12 @@ Require-Cmd docker
 $hasCompose = $false
 try { $null = docker compose version; $hasCompose = $true } catch {}
 if (-not $hasCompose) { Require-Cmd docker-compose }
-Require-Cmd python
+## Resolve a Python 3 command cross-platform
+$pythonCmd = $null
+if (Get-Command python -ErrorAction SilentlyContinue) { $pythonCmd = "python" }
+elseif (Get-Command python3 -ErrorAction SilentlyContinue) { $pythonCmd = "python3" }
+elseif (Get-Command py -ErrorAction SilentlyContinue) { $pythonCmd = "py -3" }
+else { throw "[error] Python 3 not found. Please install Python 3 and ensure 'python' or 'python3' is on PATH." }
 Require-Cmd node
 
 Write-Host "[2/8] Bringing up Postgres"
@@ -49,16 +54,21 @@ if (-not $ok) { throw "[error] Postgres not ready" }
 if (-not $env:DATABASE_URL) { $env:DATABASE_URL = "postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni" }
 
 Write-Host "[4/8] Backend venv + deps"
-$venvDir = Join-Path $ROOT "backend\.venv"
-if (-not (Test-Path $venvDir)) { python -m venv $venvDir }
-& "$venvDir\Scripts\python.exe" -m pip install --disable-pip-version-check -r "$ROOT\backend\requirements.txt"
+$venvDir = Join-Path $ROOT "backend/.venv"
+if (-not (Test-Path $venvDir)) { & $pythonCmd -m venv $venvDir }
+
+# Resolve venv python path per-OS
+if ($IsWindows) { $venvPython = Join-Path $venvDir "Scripts/python.exe" }
+else { $venvPython = Join-Path $venvDir "bin/python" }
+
+& $venvPython -m pip install --disable-pip-version-check -r (Join-Path $ROOT "backend/requirements.txt")
 
 Write-Host "[5/8] Initialize DB schema (idempotent)"
-$env:PYTHONPATH = "$ROOT\backend"
-& "$venvDir\Scripts\python.exe" -c "import os; from app.db import init_db; print('[init] DATABASE_URL =', os.getenv('DATABASE_URL')); init_db(); print('[ok] DB initialized')"
+$env:PYTHONPATH = (Join-Path $ROOT "backend")
+& $venvPython -c "import os; from app.db import init_db; print('[init] DATABASE_URL =', os.getenv('DATABASE_URL')); init_db(); print('[ok] DB initialized')"
 
 Write-Host "[6/8] Frontend deps"
-Push-Location "$ROOT\frontend"
+Push-Location (Join-Path $ROOT "frontend")
 if (Get-Command yarn -ErrorAction SilentlyContinue) { yarn install }
 else { npm install --no-audit --no-fund --silent }
 Write-Host "[6.1/8] Playwright browsers"
@@ -70,19 +80,20 @@ else { npx msw init public --save }
 Pop-Location
 
 Write-Host "[7/8] Start backend and frontend"
-$BACKEND_LOG = "$ROOT\backend\backend.log"
-$FRONTEND_LOG = "$ROOT\frontend\frontend.log"
+$BACKEND_LOG = (Join-Path $ROOT "backend/backend.log")
+$FRONTEND_LOG = (Join-Path $ROOT "frontend/frontend.log")
 Remove-Item $BACKEND_LOG, $FRONTEND_LOG -ErrorAction SilentlyContinue
 
 # Start backend
-$backend = Start-Process -FilePath "$venvDir\Scripts\python.exe" -ArgumentList "-m","uvicorn","app.main:app","--app-dir","$ROOT\backend","--port","8000" -NoNewWindow -RedirectStandardOutput $BACKEND_LOG -RedirectStandardError $BACKEND_LOG -PassThru
+$backendDir = (Join-Path $ROOT "backend")
+$backend = Start-Process -FilePath $venvPython -ArgumentList "-m","uvicorn","app.main:app","--app-dir",$backendDir,"--port","8000" -NoNewWindow -RedirectStandardOutput $BACKEND_LOG -RedirectStandardError $BACKEND_LOG -PassThru
 $backend.Id | Out-File -FilePath $BACKEND_PID_FILE -Encoding ascii -Force
 
 # Start frontend
 if (Get-Command yarn -ErrorAction SilentlyContinue) {
-  $frontend = Start-Process -FilePath "yarn" -ArgumentList "dev" -WorkingDirectory "$ROOT\frontend" -NoNewWindow -RedirectStandardOutput $FRONTEND_LOG -RedirectStandardError $FRONTEND_LOG -PassThru
+  $frontend = Start-Process -FilePath "yarn" -ArgumentList "dev" -WorkingDirectory (Join-Path $ROOT "frontend") -NoNewWindow -RedirectStandardOutput $FRONTEND_LOG -RedirectStandardError $FRONTEND_LOG -PassThru
 } else {
-  $frontend = Start-Process -FilePath "npm" -ArgumentList "run","dev","--silent" -WorkingDirectory "$ROOT\frontend" -NoNewWindow -RedirectStandardOutput $FRONTEND_LOG -RedirectStandardError $FRONTEND_LOG -PassThru
+  $frontend = Start-Process -FilePath "npm" -ArgumentList "run","dev","--silent" -WorkingDirectory (Join-Path $ROOT "frontend") -NoNewWindow -RedirectStandardOutput $FRONTEND_LOG -RedirectStandardError $FRONTEND_LOG -PassThru
 }
 $frontend.Id | Out-File -FilePath $FRONTEND_PID_FILE -Encoding ascii -Force
 
