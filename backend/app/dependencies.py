@@ -9,6 +9,7 @@ from app.services.implementations.OCRService import OCRService
 from app.services.implementations.TextExtractor import TextExtractor
 from app.services.implementations.MetadataExtractor import MetadataExtractor
 from app.services.implementations.UploadService import UploadService
+from app.services.implementations.FileValidationService import FileValidationService
 from app.services.implementations.TextChunker import TextChunker
 from app.services.implementations.LocalEmbeddingService import LocalEmbeddingService
 from app.repositories.implementations.DocumentRepository import DocumentRepository
@@ -20,6 +21,7 @@ from app.services.interfaces.IOCR import IOCR
 from app.services.interfaces.ITextExtractor import ITextExtractor
 from app.services.interfaces.IMetadataExtractor import IMetadataExtractor
 from app.services.interfaces.IUploadService import IUploadService
+from app.services.interfaces.IFileValidationService import IFileValidationService
 from app.services.interfaces.IDocumentStatsService import IDocumentStatsService
 from app.services.interfaces.IDocumentQueryService import IDocumentQueryService
 
@@ -61,6 +63,11 @@ def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
 		chunker=TextChunker(max_tokens=1000, overlap=200),
 		embeddings=get_embedding_service(),
 	)
+
+
+@lru_cache(maxsize=1)
+def get_file_validation_service() -> IFileValidationService:
+	return FileValidationService()
 
 
 def get_document_stats_service(db: Session = Depends(get_db)) -> IDocumentStatsService:
