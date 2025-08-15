@@ -96,9 +96,9 @@ echo "$FRONTEND_PID" > "$FRONTEND_PID_FILE"
 echo "[8/8] Warmup check"
 warm_ok=0
 if command -v curl >/dev/null 2>&1; then
-  for i in {1..30}; do curl -fsS http://127.0.0.1:8000/api/dashboard >/dev/null && { warm_ok=1; break; } || true; sleep 1; done
+  for i in {1..30}; do curl -fsS http://127.0.0.1:8000/api/dashboard/agreement-types >/dev/null && { warm_ok=1; break; } || true; sleep 1; done
 elif command -v wget >/dev/null 2>&1; then
-  for i in {1..30}; do wget -qO- http://127.0.0.1:8000/api/dashboard >/dev/null && { warm_ok=1; break; } || true; sleep 1; done
+  for i in {1..30}; do wget -qO- http://127.0.0.1:8000/api/dashboard/agreement-types >/dev/null && { warm_ok=1; break; } || true; sleep 1; done
 else
   echo "[warn] curl/wget not found; skipping warmup"
 fi
