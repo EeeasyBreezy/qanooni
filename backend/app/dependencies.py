@@ -70,5 +70,5 @@ def get_document_stats_service(db: Session = Depends(get_db)) -> IDocumentStatsS
 
 def get_document_query_service(db: Session = Depends(get_db)) -> IDocumentQueryService:
 	repo = DocumentRepository(db)
-	return DocumentQueryService(repo, embeddings=get_embedding_service())
+	return DocumentQueryService(repo, embeddings=get_embedding_service(), metadata_extractor=get_metadata_extractor())
 

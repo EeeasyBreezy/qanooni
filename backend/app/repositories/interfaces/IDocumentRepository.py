@@ -49,10 +49,12 @@ class IDocumentRepository(ABC):
         self,
         *,
         query_vector: List[float],
+        jurisdiction: Optional[str],
+        agreement_type: Optional[str],
         limit: int = 50,
         offset: int = 0,
     ) -> Pagination[Dict[str, Any]]:
-        """Vector similarity search over chunks. No additional filters."""
+        """Vector similarity search over chunks with optional metadata filters."""
         raise NotImplementedError
 
 
