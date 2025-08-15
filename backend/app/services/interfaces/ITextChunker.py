@@ -6,5 +6,3 @@ class ITextChunker(ABC):
     @abstractmethod
     def chunk(self, text: str) -> List[str]:
         raise NotImplementedError
-
-
