@@ -2,6 +2,7 @@ import time, uuid
 import pytest
 from pathlib import Path
 from tests_integration.client.http_client import ApiClient
+from tests_integration.util.db_cleaner import DatabaseCleaner
 
 BASE_URL = "http://127.0.0.1:8000"
 ASSETS_DIR = Path(__file__).resolve().parent / "files"
@@ -10,6 +11,15 @@ class TestDashboardAgreementTypes:
     @classmethod
     def setup_class(cls) -> None:
         cls.client = ApiClient(BASE_URL)
+        cls.cleaner = DatabaseCleaner()
+        cls._uploaded_files = []  # type: list[str]
+
+    @classmethod
+    def teardown_class(cls) -> None:
+        try:
+            cls.cleaner.delete_documents_by_file_names(cls._uploaded_files)
+        finally:
+            cls._uploaded_files.clear()
 
     def _get_count(self, items, category: str) -> int:
         for i in items:
@@ -38,6 +48,8 @@ class TestDashboardAgreementTypes:
         docx_path = str(ASSETS_DIR / "nda - uae.docx")
         self.client.upload_file(filepath=pdf_path,  request_id=str(uuid.uuid4()))
         self.client.upload_file(filepath=docx_path, request_id=str(uuid.uuid4()))
+        # Track uploaded file names for cleanup
+        self._uploaded_files.extend([Path(pdf_path).name, Path(docx_path).name])
 
         # Poll until counts reflect at least +2 for NDA
         self._wait_for_delta(category, baseline, expected_delta=2, timeout_s=15.0)
