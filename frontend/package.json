@@ -35,8 +35,6 @@
     "recharts": "^2.12.7"
   },
   "devDependencies": {
-    "start-server-and-test": "^2.0.5",
-    "cross-env": "^7.0.3",
     "@playwright/test": "^1.54.2",
     "@types/node": "^24.2.1",
     "@types/react": "^18.3.3",
@@ -44,14 +42,15 @@
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "@typescript-eslint/parser": "^8.13.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "cross-env": "^7.0.3",
     "eslint": "^9.15.0",
-    "eslint-plugin-barrel-files": "^1.2.1",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "msw": "^2.4.1",
     "prettier": "^3.6.2",
+    "start-server-and-test": "^2.0.5",
     "typescript": "^5.5.3",
     "vite": "^5.3.1",
     "vitest": "^3.2.4"

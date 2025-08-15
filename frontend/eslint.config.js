@@ -3,7 +3,6 @@ import parser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
 import prettierPlugin from 'eslint-plugin-prettier';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
-import barrelFilesPlugin from 'eslint-plugin-barrel-files';
 import importPlugin from 'eslint-plugin-import';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
@@ -37,15 +36,12 @@ export default [
       react: reactPlugin,
       prettier: prettierPlugin,
       '@typescript-eslint': typescriptPlugin,
-      'barrel-files': barrelFilesPlugin,
       import: importPlugin,
       'react-hooks': reactHooksPlugin,
       archPlugin,
     },
     rules: {
       'archPlugin/no-banned-imports': 'off',
-      'barrel-files/avoid-namespace-import': 'error',
-      'barrel-files/avoid-re-export-all': 'error',
       'import/order': [
         'warn',
         {
