@@ -55,6 +55,7 @@ for i in {1..60}; do
 done
 
 export DATABASE_URL="${DATABASE_URL:-postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni}"
+export TOKENIZERS_PARALLELISM=false
 
 echo "[4/8] Backend venv + deps"
 if [[ ! -d "$ROOT_DIR/backend/.venv" ]]; then $PYTHON -m venv "$ROOT_DIR/backend/.venv"; fi
@@ -85,7 +86,7 @@ BACKEND_LOG="$ROOT_DIR/backend/backend.log"
 FRONTEND_LOG="$ROOT_DIR/frontend/frontend.log"
 rm -f "$BACKEND_LOG" "$FRONTEND_LOG" || true
 
-( cd "$ROOT_DIR/backend" && exec "$ROOT_DIR/backend/.venv/bin/python" -m uvicorn app.main:app --app-dir "$ROOT_DIR/backend" --port 8000 >"$BACKEND_LOG" 2>&1 ) &
+( cd "$ROOT_DIR/backend" && exec "$ROOT_DIR/backend/.venv/bin/python" -m uvicorn app.main:app --app-dir "$ROOT_DIR/backend" --host 127.0.0.1 --port 8000 >"$BACKEND_LOG" 2>&1 ) &
 BACKEND_PID=$!
 echo "$BACKEND_PID" > "$BACKEND_PID_FILE"
 

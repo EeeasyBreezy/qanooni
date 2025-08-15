@@ -1,6 +1,5 @@
 # app/main.py
 from fastapi import FastAPI, APIRouter
-from app.db import init_db
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="FastAPI React Starter")
@@ -26,7 +25,3 @@ api.include_router(notifications.router)
 
 app.include_router(api)
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    init_db()
