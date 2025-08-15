@@ -32,6 +32,7 @@ export const QueryPage: React.FC = () => {
         canSubmit={canSubmit}
         onSubmit={submit}
         onClear={clear}
+        testId="query-input"
       />
 
       <QueryResults

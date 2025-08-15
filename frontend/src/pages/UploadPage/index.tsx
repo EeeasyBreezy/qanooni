@@ -24,8 +24,13 @@ const UploadPage: React.FC = () => {
         Upload
       </Typography>
       <Stack spacing={2}>
-        <FileDropzone onFilesSelected={addFiles} />
-        <DataTable columns={columns} rows={items} getRowId={(r) => r.id} />
+        <FileDropzone onFilesSelected={addFiles} testId="upload-dropzone" />
+        <DataTable
+          columns={columns}
+          rows={items}
+          getRowId={(r) => r.id}
+          testId="upload-table"
+        />
         {items.map(
           (i) =>
             i.status === "idle" && (

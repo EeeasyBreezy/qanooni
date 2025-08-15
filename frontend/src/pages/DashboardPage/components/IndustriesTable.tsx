@@ -50,6 +50,7 @@ export const IndustriesTable: React.FC = () => {
           pageSizeOptions={pageSizeOptions}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={onPaginationModelChange}
+          data-testid="industries-table"
         />
       </Box>
     </Box>

@@ -1,10 +1,10 @@
-import React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
+import React from "react";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 
 export type Column<T> = {
   key: keyof T | string;
@@ -17,16 +17,24 @@ type DataTableProps<T> = {
   columns: Column<T>[];
   rows: T[];
   getRowId: (row: T, index: number) => string | number;
+  testId?: string;
 };
 
-const DataTable = <T,>({ columns, rows, getRowId }: DataTableProps<T>) => {
+const DataTable = <T,>({
+  columns,
+  rows,
+  getRowId,
+  testId,
+}: DataTableProps<T>) => {
   return (
     <Paper elevation={0} variant="outlined">
-      <Table size="small">
+      <Table size="small" data-testid={testId}>
         <TableHead>
           <TableRow>
             {columns.map((c) => (
-              <TableCell key={String(c.key)} style={{ width: c.width }}>{c.header}</TableCell>
+              <TableCell key={String(c.key)} style={{ width: c.width }}>
+                {c.header}
+              </TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -47,5 +55,3 @@ const DataTable = <T,>({ columns, rows, getRowId }: DataTableProps<T>) => {
 };
 
 export default DataTable;
-
-

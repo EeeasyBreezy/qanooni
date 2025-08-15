@@ -1,14 +1,19 @@
-import React from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@shared/components/Typography';
-import { FileExtensions } from '@shared/consts/FileExtensions';
+import React from "react";
+import Box from "@mui/material/Box";
+import Typography from "@shared/components/Typography";
+import { FileExtensions } from "@shared/consts/FileExtensions";
 
 type FileDropzoneProps = {
   onFilesSelected: (files: FileList | null) => void;
   accept?: string;
+  testId?: string;
 };
 
-const FileDropzone: React.FC<FileDropzoneProps> = ({ onFilesSelected, accept = `${FileExtensions.pdf},${FileExtensions.docx}` }) => {
+const FileDropzone: React.FC<FileDropzoneProps> = ({
+  onFilesSelected,
+  accept = `${FileExtensions.pdf},${FileExtensions.docx}`,
+  testId,
+}) => {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = React.useState(false);
 
@@ -30,6 +35,7 @@ const FileDropzone: React.FC<FileDropzoneProps> = ({ onFilesSelected, accept = `
         multiple={true}
         hidden
         onChange={(e) => onFilesSelected(e.target.files)}
+        data-testid={testId}
       />
       <Box
         onClick={openDialog}
@@ -40,21 +46,21 @@ const FileDropzone: React.FC<FileDropzoneProps> = ({ onFilesSelected, accept = `
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
         sx={{
-          border: '2px dashed',
-          borderColor: dragOver ? 'primary.main' : 'divider',
+          border: "2px dashed",
+          borderColor: dragOver ? "primary.main" : "divider",
           borderRadius: 2,
           p: 4,
-          textAlign: 'center',
-          cursor: 'pointer',
-          bgcolor: dragOver ? 'action.hover' : 'transparent',
+          textAlign: "center",
+          cursor: "pointer",
+          bgcolor: dragOver ? "action.hover" : "transparent",
         }}
       >
-        <Typography variant="h6">Drag and drop PDF/DOCX files here, or click to select</Typography>
+        <Typography variant="h6">
+          Drag and drop PDF/DOCX files here, or click to select
+        </Typography>
       </Box>
     </>
   );
 };
 
 export default FileDropzone;
-
-

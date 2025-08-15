@@ -15,7 +15,7 @@ export const GoverningLawChart: React.FC = () => {
   return (
     <Box sx={{ flex: 1 }}>
       <Typography variant="h6">Governing Law</Typography>
-      <PieChart data={pieData} />
+      <PieChart data={pieData} testId="governing-law-chart" />
     </Box>
   );
 };

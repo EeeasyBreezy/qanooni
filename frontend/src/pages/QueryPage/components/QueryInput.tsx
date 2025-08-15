@@ -9,6 +9,7 @@ type Props = {
   canSubmit: boolean;
   onSubmit: () => void;
   onClear: () => void;
+  testId?: string;
 };
 
 export const QueryInput: React.FC<Props> = ({
@@ -18,6 +19,7 @@ export const QueryInput: React.FC<Props> = ({
   canSubmit,
   onSubmit,
   onClear,
+  testId,
 }) => {
   return (
     <form
@@ -34,6 +36,7 @@ export const QueryInput: React.FC<Props> = ({
           style={{ width: "100%" }}
           placeholder="Ask a question, e.g., Which agreements are governed by UAE law?"
           disabled={isPending}
+          data-testid={testId}
         />
         <Stack direction="row" spacing={1}>
           <Button type="submit" variant="contained" disabled={!canSubmit}>

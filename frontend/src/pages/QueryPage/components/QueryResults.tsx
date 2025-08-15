@@ -51,6 +51,7 @@ export const QueryResults: React.FC<Props> = ({
         paginationModel={{ page, pageSize }}
         pageSizeOptions={[5, 10, 25, 50]}
         onPaginationModelChange={onPaginationModelChange}
+        data-testid="query-results"
       />
     </Box>
   );

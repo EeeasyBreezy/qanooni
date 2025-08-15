@@ -20,6 +20,7 @@ export function AgreementsChart() {
           name: category,
           value: count,
         }))}
+        testId="agreements-chart"
       />
     </Box>
   );
