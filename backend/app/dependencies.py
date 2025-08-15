@@ -26,49 +26,49 @@ from app.services.interfaces.IDocumentQueryService import IDocumentQueryService
 
 @lru_cache(maxsize=1)
 def get_image_processor() -> IImageProcessor:
-    return ImageProcessor()
+	return ImageProcessor()
 
 
 @lru_cache(maxsize=1)
 def get_ocr_service() -> IOCR:
-    return OCRService(get_image_processor())
+	return OCRService(get_image_processor())
 
 
 @lru_cache(maxsize=1)
 def get_text_extractor() -> ITextExtractor:
-    return TextExtractor(get_ocr_service())
+	return TextExtractor(get_ocr_service())
 
 
 @lru_cache(maxsize=1)
 def get_metadata_extractor() -> IMetadataExtractor:
-    return MetadataExtractor()
+	return MetadataExtractor()
 
 
 @lru_cache(maxsize=1)
 def get_embedding_service() -> LocalEmbeddingService:
-    return LocalEmbeddingService()
+	return LocalEmbeddingService()
 
 
 def get_upload_service(db: Session = Depends(get_db)) -> IUploadService:
-    # Inject a repository factory so background worker can create repos with fresh Sessions
-    def repository_factory(s: Session) -> DocumentRepository:
-        return DocumentRepository(s)
+	# Inject a repository factory so background worker can create repos with fresh Sessions
+	def repository_factory(s: Session) -> DocumentRepository:
+		return DocumentRepository(s)
 
-    return UploadService(
-        textExtractor=get_text_extractor(),
-        metadataExtractor=get_metadata_extractor(),
-        repository_factory=repository_factory,
-        chunker=TextChunker(max_tokens=1000, overlap=200),
-        embeddings=get_embedding_service(),
-    )
+	return UploadService(
+		textExtractor=get_text_extractor(),
+		metadataExtractor=get_metadata_extractor(),
+		repository_factory=repository_factory,
+		chunker=TextChunker(max_tokens=1000, overlap=200),
+		embeddings=get_embedding_service(),
+	)
 
 
 def get_document_stats_service(db: Session = Depends(get_db)) -> IDocumentStatsService:
-    repo = DocumentRepository(db)
-    return DocumentStatsService(repo)
+	repo = DocumentRepository(db)
+	return DocumentStatsService(repo)
 
 
 def get_document_query_service(db: Session = Depends(get_db)) -> IDocumentQueryService:
-    repo = DocumentRepository(db)
-    return DocumentQueryService(repo)
+	repo = DocumentRepository(db)
+	return DocumentQueryService(repo, embeddings=get_embedding_service())
 

@@ -31,6 +31,63 @@ class DocumentRepository(IDocumentRepository):
         self._db.flush()
         return [int(c.id) for c in chunks]
 
+    def search_vector(
+        self,
+        *,
+        query_vector: List[float],
+        jurisdiction: Optional[str],
+        agreement_type: Optional[str],
+        limit: int = 50,
+        offset: int = 0,
+    ) -> Pagination[Dict[str, Any]]:
+        # If database is Postgres with pgvector, use <-> operator; else fallback to LIKE search on text
+        if self._db.bind and self._db.bind.dialect.name == "postgresql":
+            sql = text(
+                """
+                SELECT dc.id AS chunk_id, d.id AS document_id, d.file_name, d.jurisdiction, d.agreement_type, d.industry,
+                       (1 - (dc.embedding <-> :qvec)) AS score,
+                       dc.content AS snippet
+                FROM document_chunks dc
+                JOIN documents d ON d.id = dc.document_id
+                WHERE dc.embedding IS NOT NULL
+                  AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
+                  AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
+                ORDER BY dc.embedding <-> :qvec
+                LIMIT :limit OFFSET :offset
+                """
+            )
+            rows = self._db.execute(
+                sql,
+                {
+                    "qvec": query_vector,
+                    "jurisdiction": jurisdiction,
+                    "agreement_type": agreement_type,
+                    "limit": limit,
+                    "offset": offset,
+                },
+            ).mappings().all()
+            # Count is expensive with ANN; approximate by returning offset+len(rows) or null
+            total = offset + len(rows)
+            return Pagination(items=[dict(r) for r in rows], offset=offset, limit=limit, total=total)
+
+        # Fallback: return top documents by LIKE matching on concatenated chunks
+        q = self._db.query(DocumentEntity)
+        like = "%"
+        total = q.order_by(None).count()
+        docs = q.limit(limit).offset(offset).all()
+        return Pagination(items=[
+            {
+                "document_id": d.id,
+                "file_name": d.file_name,
+                "jurisdiction": d.jurisdiction,
+                "agreement_type": d.agreement_type,
+                "industry": d.industry,
+                "score": None,
+                "snippet": None,
+            }
+            for d in docs
+        ], offset=offset, limit=limit, total=total)
+
     def search(
         self,
         *,

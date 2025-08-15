@@ -5,11 +5,13 @@ from app.common.model.Pagination import Pagination
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 from app.services.interfaces.IDocumentQueryService import IDocumentQueryService
 from app.services.model.SearchRow import SearchRow
+from app.services.interfaces.IEmbeddingService import IEmbeddingService
 
 
 class DocumentQueryService(IDocumentQueryService):
-    def __init__(self, repository: IDocumentRepository):
+    def __init__(self, repository: IDocumentRepository, embeddings: Optional[IEmbeddingService] = None):
         self._repo = repository
+        self._embeddings = embeddings
 
     def _derive_filters(self, question: str) -> Dict[str, Optional[str]]:
         q = question.lower()
@@ -36,20 +38,30 @@ class DocumentQueryService(IDocumentQueryService):
     def run_query(self, *, question: str, limit: int, offset: int) -> Pagination[SearchRow]:
         filters = self._derive_filters(question)
         fts_query = self._build_fts_query(question)
-        page = self._repo.search(
-            fts_query=fts_query,
-            jurisdiction=filters["jurisdiction"],
-            agreement_type=filters["agreement_type"],
-            limit=limit,
-            offset=offset,
-        )
+        if self._embeddings is not None:
+            qvec = self._embeddings.embed_texts([question])[0]
+            page = self._repo.search_vector(
+                query_vector=qvec,
+                jurisdiction=filters["jurisdiction"],
+                agreement_type=filters["agreement_type"],
+                limit=limit,
+                offset=offset,
+            )
+        else:
+            page = self._repo.search(
+                fts_query=fts_query,
+                jurisdiction=filters["jurisdiction"],
+                agreement_type=filters["agreement_type"],
+                limit=limit,
+                offset=offset,
+            )
         items = [
             SearchRow(
                 document=r.get("file_name", ""),
                 governing_law=r.get("jurisdiction"),
                 agreement_type=r.get("agreement_type"),
                 industry=r.get("industry"),
-                score=r.get("rank"),
+                score=r.get("rank") if self._embeddings is None else r.get("score"),
             )
             for r in page.items
         ]
