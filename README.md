@@ -111,17 +111,9 @@ You can plug an LLM in multiple places to improve relevance and UX:
   - Use an LLM to rewrite/expand the user question, extract structured filters (jurisdiction, agreement type), and feed both to search.
   - Replace or augment `MetadataExtractor` behind an interface.
 
-- Reranking
-  - After initial vector search, use an LLM or cross-encoder to rerank top results before answering.
-
-- Summarization and chunking
-  - Summarize long documents; generate semantic titles; dynamic chunking based on semantic boundaries.
-
-- Safety and formatting
-  - Add moderation, PII redaction, and answer style control via system prompts.
-
 Implementation notes
 - Existing `IEmbeddingService` makes it easy to swap local embeddings for API-based embeddings.
+- Existing `IMetadataExtractor` abstracts away manipulations with user query/ncoming data, can be swapped to LLM/API.
 - Add a new endpoint (e.g., `/chat/ask`) for streaming answers; reuse SSE infra for token streaming.
 - Cache answers and reranks keyed by (question, corpus version) to control costs.
 
@@ -158,9 +150,4 @@ Minimal code changes to move toward streaming
 1) Replace `await file.read()` with chunked reads written to a temp file.
 2) Pass a file path to the background worker; update `TextExtractor` to accept a path/stream.
 3) Store the original file in object storage if long-term retention is needed; persist only metadata + derived text/embeddings in Postgres.
-
-Tuning chunking size
-```python
-# dependencies.py
-chunker=TextChunker(max_tokens=1000, overlap=200)  # Increase max_tokens for fewer, larger chunks
 ```
