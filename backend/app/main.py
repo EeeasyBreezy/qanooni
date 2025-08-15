@@ -1,6 +1,7 @@
 # app/main.py
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from threading import Thread
 
 app = FastAPI(title="FastAPI React Starter")
 
@@ -25,3 +26,18 @@ api.include_router(notifications.router)
 
 app.include_router(api)
 
+
+@app.on_event("startup")
+def _warm_background_services() -> None:
+    # Warm the embedding model in a background thread so startup is not blocked
+    def _warm() -> None:
+        try:
+            from app.dependencies import get_embedding_service
+            svc = get_embedding_service()
+            # Access dimension which triggers lazy load in LocalEmbeddingService
+            _ = svc.dimension()
+        except Exception:
+            # Best-effort warmup; failures shouldn't block the app
+            pass
+
+    Thread(target=_warm, daemon=True).start()

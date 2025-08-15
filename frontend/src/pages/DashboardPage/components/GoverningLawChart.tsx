@@ -14,10 +14,10 @@ export const GoverningLawChart: React.FC = () => {
     return <Alert severity="error">Error loading governing law</Alert>;
   if (!data) return <Alert severity="error">No data available</Alert>;
 
-  const pieData = React.useMemo(
-    () => data.map(({ category, count }) => ({ name: category, value: count })),
-    [data]
-  );
+  const pieData = data.map(({ category, count }) => ({
+    name: category,
+    value: count,
+  }));
 
   return (
     <Box sx={{ flex: 1 }}>
