@@ -18,7 +18,7 @@ class TestDocumentRepository:
         from app import db as db_module  # type: ignore
         self.db = importlib.reload(db_module)
 
-        # Initialize schema and FTS triggers for this database
+        # Initialize schema for this database
         self.db.init_db()
 
         # Session for tests
@@ -65,7 +65,7 @@ class TestDocumentRepository:
             agreement_type=agreement_type,
             jurisdiction=jurisdiction,
             industry=industry,
-            geography_json=None,
+            geography_json=geography_mentioned,
         )
 
     def test_create_documents_smoke(self) -> None:
@@ -86,7 +86,7 @@ class TestDocumentRepository:
         )
         assert len(ids) == 2
 
-    def test_search_with_filters(self) -> None:
+    def test_insertions_and_counts(self) -> None:
         self.repo.bulk_create_documents(
             [
                 self._make_entity(

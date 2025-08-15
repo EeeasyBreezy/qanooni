@@ -32,34 +32,8 @@ SessionLocal = sessionmaker(
 
 
 def _ensure_postgres_fts_objects() -> None:
-    # Ensure Postgres FTS generated column and index exist
-    if engine.dialect.name != "postgresql":
-        return
-    with engine.connect() as conn:
-        # Create extensions if possible
-        try:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
-        except Exception:
-            pass
-        # Add generated tsvector column and GIN index
-        conn.execute(
-            text(
-                """
-                ALTER TABLE documents
-                ADD COLUMN IF NOT EXISTS text_tsv tsvector
-                GENERATED ALWAYS AS (to_tsvector('simple', text)) STORED;
-                """
-            )
-        )
-        conn.execute(
-            text(
-                """
-                CREATE INDEX IF NOT EXISTS idx_documents_text_tsv
-                ON documents USING GIN (text_tsv);
-                """
-            )
-        )
-        conn.commit()
+    # Legacy FTS objects removed
+    return
 
 
 def init_db() -> None:
@@ -89,8 +63,7 @@ def init_db() -> None:
     # Create tables
     Base.metadata.create_all(bind=engine)
 
-    # Ensure Postgres FTS objects (generated tsvector + index) after base tables exist
-    _ensure_postgres_fts_objects()
+    # No FTS setup
 
 
 @contextmanager
