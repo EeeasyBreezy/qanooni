@@ -22,19 +22,6 @@ class IDocumentRepository(ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def search(
-        self,
-        *,
-        fts_query: Optional[str],
-        jurisdiction: Optional[str],
-        agreement_type: Optional[str],
-        limit: int = 50,
-        offset: int = 0,
-    ) -> Pagination[Dict[str, Any]]:
-        """Full-text search joined with optional metadata filters, returns paginated items + total count."""
-        raise NotImplementedError
-
     # Segregated aggregation methods
     @abstractmethod
     def count_by_agreement_type(self) -> List[AggregationResultEntity]:
