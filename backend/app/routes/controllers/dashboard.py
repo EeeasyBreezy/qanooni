@@ -25,9 +25,9 @@ def get_country_counts(service: IDocumentStatsService = Depends(get_document_sta
 @router.get("/industries", response_model=PaginationDTO[AggregationResultDTO])
 def get_industry_counts(
     service: IDocumentStatsService = Depends(get_document_stats_service),
-    limit: int = Query(10, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    sort: str = Query("desc", pattern="^(?i)(asc|desc)$"),
+    limit: int = Query(..., ge=1, le=50),
+    offset: int = Query(..., ge=0),
+    sort: str = Query(..., pattern="^(?i)(asc|desc)$"),
 ) -> PaginationDTO[AggregationResultDTO]:
     page = service.get_industry_counts(limit=limit, offset=offset, sort=sort)
     return PaginationDTO[AggregationResultDTO](

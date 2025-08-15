@@ -114,6 +114,13 @@ class ApiClient:
             files=[{"name": "file", "filename": filepath.split("/")[-1], "content_type": mime_type, "content": file_bytes}],
         )
 
+    def upload_bytes(self, *, content: bytes, filename: str, content_type: str, request_id: str) -> None:
+        self._post_multipart(
+            "/api/upload",
+            fields={"request_id": request_id},
+            files=[{"name": "file", "filename": filename, "content_type": content_type, "content": content}],
+        )
+
     def upload_malformed(self, *, fields: Dict[str, str], file_tuple: Optional[Dict[str, Any]] = None) -> None:
         files: List[Dict[str, Any]] = []
         if file_tuple is not None:
