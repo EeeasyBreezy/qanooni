@@ -14,7 +14,7 @@ export const getCountryCounts = async (): Promise<AggregationResultDTO[]> => {
 };
 
 export const getIndustryCounts = async (params: IndustriesQueryParams): Promise<Pagination<AggregationResultDTO>> => {
-  return httpClient.get<Pagination<AggregationResultDTO>>(dashboardApiPaths.industries(params));
+  return httpClient.get<Pagination<AggregationResultDTO>>(dashboardApiPaths.industries, { params });
 };
 
 
