@@ -15,7 +15,7 @@ type PomFixtures = {
 };
 
 
-export const test = base.extend<MswFixtures & PomFixtures>({
+export const testFixture = base.extend<MswFixtures & PomFixtures>({
   setMswMode: async ({ page }, use) => {
     await use(async (mode) => {
       await page.addInitScript((m) => {
