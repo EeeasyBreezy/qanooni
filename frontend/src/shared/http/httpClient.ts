@@ -73,7 +73,10 @@ export class HttpClient {
   }
 }
 
-export const httpBaseUrl: string = (import.meta as any)?.env?.VITE_API_BASE_URL ?? '/api';
+const isMocksEnabled = ((import.meta as any)?.env?.VITE_USE_MOCKS ?? '') === 'true';
+export const httpBaseUrl: string = isMocksEnabled
+  ? ''
+  : ((import.meta as any)?.env?.VITE_API_BASE_URL ?? '/api');
 
 export const httpClient = new HttpClient({
   baseURL: httpBaseUrl,

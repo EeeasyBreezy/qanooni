@@ -5,3 +5,4 @@ dist/
 /backend/app/data
 backend/backend.log
 frontend/frontend.log
+frontend/.env
