@@ -3,8 +3,7 @@
     "python.testing.pytestEnabled": true,
     "python.testing.cwd": "${workspaceFolder}/backend",
     "python.testing.pytestArgs": [
-        "tests",
-        "tests_integration"
+        "backend"
     ],
     "python.testing.pytestPath": "${workspaceFolder}/backend/.venv/bin/pytest",
     "editor.formatOnSave": true,
@@ -17,5 +16,6 @@
             "directory": "./",
             "changeProcessCWD": true
         }
-    ]
+    ],
+    "python.testing.unittestEnabled": false
 }
