@@ -68,15 +68,10 @@ class ApiClient:
         ]
         return QueryResponseDTO(items=items, limit=int(data["limit"]), offset=int(data["offset"]), total=int(data["total"]))
 
-    def upload_file(self, *, filepath: str, request_id: str) -> None:
-        # Build multipart/form-data manually with urllib
+    def _post_multipart(self, path: str, *, fields: Dict[str, str], files: List[Dict[str, Any]]) -> None:
         boundary = "----Boundary7MA4YWxkTrZu0gW"
-        mime_type, _ = mimetypes.guess_type(filepath)
-        mime_type = mime_type or "application/octet-stream"
-        with open(filepath, "rb") as f:
-            file_bytes = f.read()
-
         parts: List[bytes] = []
+
         def add_field(name: str, value: str) -> None:
             parts.append(f"--{boundary}\r\n".encode())
             parts.append(f"Content-Disposition: form-data; name=\"{name}\"\r\n\r\n".encode())
@@ -90,16 +85,32 @@ class ApiClient:
             parts.append(content)
             parts.append("\r\n".encode())
 
-        add_field("request_id", request_id)
-        add_file("file", filepath.split("/")[-1], mime_type, file_bytes)
+        for k, v in fields.items():
+            add_field(k, v)
+        for f in files:
+            add_file(f["name"], f["filename"], f["content_type"], f["content"])
+
         parts.append(f"--{boundary}--\r\n".encode())
         body = b"".join(parts)
 
-        headers = {
-            "Content-Type": f"multipart/form-data; boundary={boundary}",
-            "Content-Length": str(len(body)),
-        }
-        # This raises HttpError on non-2xx
-        self._request("POST", "/api/upload", headers=headers, data=body)
+        headers = {"Content-Type": f"multipart/form-data; boundary={boundary}", "Content-Length": str(len(body))}
+        self._request("POST", path, headers=headers, data=body)
+
+    def upload_file(self, *, filepath: str, request_id: str) -> None:
+        mime_type, _ = mimetypes.guess_type(filepath)
+        mime_type = mime_type or "application/octet-stream"
+        with open(filepath, "rb") as f:
+            file_bytes = f.read()
+        self._post_multipart(
+            "/api/upload",
+            fields={"request_id": request_id},
+            files=[{"name": "file", "filename": filepath.split("/")[-1], "content_type": mime_type, "content": file_bytes}],
+        )
+
+    def upload_malformed(self, *, fields: Dict[str, str], file_tuple: Optional[Dict[str, Any]] = None) -> None:
+        files: List[Dict[str, Any]] = []
+        if file_tuple is not None:
+            files.append(file_tuple)
+        self._post_multipart("/api/upload", fields=fields, files=files)
 
 
