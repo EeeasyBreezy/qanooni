@@ -39,8 +39,6 @@ class DocumentRepository(IDocumentRepository):
         self,
         *,
         query_vector: List[float],
-        jurisdiction: Optional[str],
-        agreement_type: Optional[str],
         limit: int = 50,
         offset: int = 0,
     ) -> Pagination[Dict[str, Any]]:
@@ -54,8 +52,6 @@ class DocumentRepository(IDocumentRepository):
                 FROM document_chunks dc
                 JOIN documents d ON d.id = dc.document_id
                 WHERE dc.embedding IS NOT NULL
-                  AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
-                  AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
                 ORDER BY dc.embedding <-> :qvec
                 LIMIT :limit OFFSET :offset
                 """
@@ -67,8 +63,6 @@ class DocumentRepository(IDocumentRepository):
                 sql,
                 {
                     "qvec": query_vector,
-                    "jurisdiction": jurisdiction,
-                    "agreement_type": agreement_type,
                     "limit": limit,
                     "offset": offset,
                 },

@@ -12,41 +12,11 @@ class DocumentQueryService(IDocumentQueryService):
         self._repo = repository
         self._embeddings = embeddings
 
-    def _derive_filters(self, question: str) -> Dict[str, Optional[str]]:
-        q = question.lower()
-        jurisdiction = None
-        agreement_type = None
-        if "governed by" in q:
-            after = q.split("governed by", 1)[1]
-            jurisdiction = after.strip().split(" ")[0].strip().strip("?.,")
-        for key in [
-            "nda",
-            "msa",
-            "service",
-            "license",
-            "employment",
-            "lease",
-            "supply",
-            "dpa",
-        ]:
-            if key in q:
-                agreement_type = key
-                break
-        return {"jurisdiction": jurisdiction, "agreement_type": agreement_type}
-
     def run_query(self, *, question: str, limit: int, offset: int) -> Pagination[SearchRow]:
         if self._embeddings is None:
             raise RuntimeError("Embedding service is not configured")
-        filters = self._derive_filters(question)
         qvec = self._embeddings.embed_texts([question])[0]
-        page = self._repo.search_vector(
-            query_vector=qvec,
-            jurisdiction=filters["jurisdiction"],
-            agreement_type=filters["agreement_type"],
-            limit=limit,
-            offset=offset,
-        )
-        # Aggregate by document to return unique documents with best score
+        page = self._repo.search_vector(query_vector=qvec, limit=limit, offset=offset)
         best_by_doc: Dict[int, Dict] = {}
         for r in page.items:
             doc_id = r.get("document_id") or r.get("id")
@@ -66,7 +36,3 @@ class DocumentQueryService(IDocumentQueryService):
             for r in best_by_doc.values()
         ]
         return Pagination(items=items, offset=offset, limit=limit, total=len(items))
-
-    # Legacy FTS builder removed
-
-
