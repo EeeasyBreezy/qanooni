@@ -3,6 +3,10 @@ import os
 import shutil
 import tempfile
 
+from app.repositories.implementations.DocumentRepository import DocumentRepository
+from app.repositories.entities.DocumentEntity import DocumentEntity
+from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
+
 
 class TestDocumentChunking:
     def test_chunk_persistence_flow(self) -> None:
@@ -16,10 +20,6 @@ class TestDocumentChunking:
             db = importlib.reload(db_module)
             db.init_db()
             session = db.SessionLocal()
-
-            from app.repositories.implementations.DocumentRepository import DocumentRepository
-            from app.repositories.entities.DocumentEntity import DocumentEntity
-            from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
 
             repo = DocumentRepository(session)
 
