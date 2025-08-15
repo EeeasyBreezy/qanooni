@@ -64,6 +64,9 @@ else { npm install --no-audit --no-fund --silent }
 Write-Host "[6.1/8] Playwright browsers"
 if (Get-Command yarn -ErrorAction SilentlyContinue) { yarn playwright install }
 else { npx playwright install }
+Write-Host "[6.2/8] MSW service worker"
+if (Get-Command yarn -ErrorAction SilentlyContinue) { yarn msw:init }
+else { npx msw init public --save }
 Pop-Location
 
 Write-Host "[7/8] Start backend and frontend"
