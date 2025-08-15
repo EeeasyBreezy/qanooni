@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, text
+from sqlalchemy import func, text, bindparam
 from app.common.model.Pagination import Pagination
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,10 @@ from app.repositories.entities.DocumentEntity import DocumentEntity
 from app.repositories.interfaces.IDocumentRepository import IDocumentRepository
 from app.repositories.entities.AggregationResultEntity import AggregationResultEntity
 from app.repositories.entities.DocumentChunkEntity import DocumentChunkEntity
+try:
+    from pgvector.sqlalchemy import Vector  # type: ignore
+except Exception:
+    Vector = None  # type: ignore
 
 class DocumentRepository(IDocumentRepository):
     def __init__(self, db: Session):
@@ -56,6 +60,9 @@ class DocumentRepository(IDocumentRepository):
                 LIMIT :limit OFFSET :offset
                 """
             )
+            # Ensure the parameter is typed as pgvector to avoid numeric[]
+            if Vector is not None:
+                sql = sql.bindparams(bindparam("qvec", type_=Vector(384)))
             rows = self._db.execute(
                 sql,
                 {
