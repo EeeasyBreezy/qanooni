@@ -40,22 +40,26 @@ class DocumentRepository(IDocumentRepository):
         limit: int = 50,
         offset: int = 0,
     ) -> Pagination[Dict[str, Any]]:
-        if fts_query and self._db.bind and self._db.bind.dialect.name == "sqlite":
-            sql = text(
+        # Postgres full-text search path
+        if fts_query and self._db.bind and self._db.bind.dialect.name == "postgresql":
+            rows_sql = text(
                 """
-                SELECT d.id, d.file_name, d.jurisdiction, d.agreement_type, d.industry,
-                       bm25(doc_fts) AS rank
+                SELECT d.id,
+                       d.file_name,
+                       d.jurisdiction,
+                       d.agreement_type,
+                       d.industry,
+                       ts_rank(d.text_tsv, plainto_tsquery(:fts_query)) AS rank
                 FROM documents d
-                JOIN doc_fts ON doc_fts.rowid = d.id
-                WHERE doc_fts MATCH :fts_query
+                WHERE d.text_tsv @@ plainto_tsquery(:fts_query)
                   AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
                   AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
-                ORDER BY rank ASC
+                ORDER BY rank DESC
                 LIMIT :limit OFFSET :offset
                 """
             )
             rows = self._db.execute(
-                sql,
+                rows_sql,
                 {
                     "fts_query": fts_query,
                     "jurisdiction": jurisdiction,
@@ -64,18 +68,18 @@ class DocumentRepository(IDocumentRepository):
                     "offset": offset,
                 },
             ).mappings().all()
-            total_sql = text(
+
+            count_sql = text(
                 """
                 SELECT COUNT(*) AS total
                 FROM documents d
-                JOIN doc_fts ON doc_fts.rowid = d.id
-                WHERE doc_fts MATCH :fts_query
+                WHERE d.text_tsv @@ plainto_tsquery(:fts_query)
                   AND (:jurisdiction IS NULL OR d.jurisdiction = :jurisdiction)
                   AND (:agreement_type IS NULL OR d.agreement_type = :agreement_type)
                 """
             )
             total_row = self._db.execute(
-                total_sql,
+                count_sql,
                 {
                     "fts_query": fts_query,
                     "jurisdiction": jurisdiction,

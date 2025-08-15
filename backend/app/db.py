@@ -10,28 +10,18 @@ class Base(DeclarativeBase):
     pass
 
 
-def _default_sqlite_path() -> str:
-    base_dir = os.path.dirname(__file__)
-    data_dir = os.path.join(base_dir, "data")
-    os.makedirs(data_dir, exist_ok=True)
-    return os.path.join(data_dir, "legalintel.db")
-
-
 def _build_database_url() -> str:
     env_url = os.getenv("DATABASE_URL")
     if env_url:
         return env_url
-    db_file = _default_sqlite_path()
-    return f"sqlite:///{db_file}"
+    # Default to local Postgres (docker-compose) if not provided
+    return "postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni"
 
 
 DATABASE_URL = _build_database_url()
 
-# For SQLite in FastAPI threads
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-)
+# Engine for Postgres (or other SQLAlchemy-supported DBs)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -41,65 +31,34 @@ SessionLocal = sessionmaker(
 )
 
 
-def _sqlite_object_exists(name: str, type_: str) -> bool:
-    with engine.connect() as conn:
-        res = conn.execute(
-            text(
-                "SELECT 1 FROM sqlite_master WHERE type = :type AND name = :name LIMIT 1"
-            ),
-            {"type": type_, "name": name},
-        ).first()
-        return res is not None
-
-
-def _ensure_sqlite_fts5_objects() -> None:
-    # Create FTS5 virtual table and triggers if they don't exist
-    if not DATABASE_URL.startswith("sqlite"):
+def _ensure_postgres_fts_objects() -> None:
+    # Ensure Postgres FTS generated column and index exist
+    if engine.dialect.name != "postgresql":
         return
-
-    # Ensure base table exists before creating FTS and triggers
-    from app.repositories.entities.DocumentEntity import DocumentEntity  # noqa: F401
-    Base.metadata.create_all(bind=engine)
-
-    # doc_fts virtual table mirrors documents.text with content sync
-    if not _sqlite_object_exists("doc_fts", "table"):
-        with engine.connect() as conn:
-            conn.execute(
-                text(
-                    """
-                    CREATE VIRTUAL TABLE doc_fts USING fts5(
-                        text,
-                        content='documents',
-                        content_rowid='id'
-                    );
-                    """
-                )
-            )
-            conn.commit()
-
-    # Triggers for sync
-    triggers = {
-        "documents_ai": """
-            CREATE TRIGGER documents_ai AFTER INSERT ON documents BEGIN
-                INSERT INTO doc_fts(rowid, text) VALUES (new.id, new.text);
-            END;
-        """,
-        "documents_au": """
-            CREATE TRIGGER documents_au AFTER UPDATE ON documents BEGIN
-                UPDATE doc_fts SET text = new.text WHERE rowid = new.id;
-            END;
-        """,
-        "documents_ad": """
-            CREATE TRIGGER documents_ad AFTER DELETE ON documents BEGIN
-                INSERT INTO doc_fts(doc_fts, rowid, text) VALUES ('delete', old.id, old.text);
-            END;
-        """,
-    }
-
     with engine.connect() as conn:
-        for name, ddl in triggers.items():
-            if not _sqlite_object_exists(name, "trigger"):
-                conn.execute(text(ddl))
+        # Create extensions if possible
+        try:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+        except Exception:
+            pass
+        # Add generated tsvector column and GIN index
+        conn.execute(
+            text(
+                """
+                ALTER TABLE documents
+                ADD COLUMN IF NOT EXISTS text_tsv tsvector
+                GENERATED ALWAYS AS (to_tsvector('simple', text)) STORED;
+                """
+            )
+        )
+        conn.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_documents_text_tsv
+                ON documents USING GIN (text_tsv);
+                """
+            )
+        )
         conn.commit()
 
 
@@ -114,23 +73,10 @@ def init_db() -> None:
     except Exception:
         pass
 
-    # If Postgres, create extensions BEFORE creating tables that depend on them
-    if engine.dialect.name == "postgresql":
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-                conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
-                conn.commit()
-        except Exception:
-            # Continue even if extensions cannot be created; deployments may restrict permissions
-            pass
-        # Now create tables
-        Base.metadata.create_all(bind=engine)
-    else:
-        # Create tables for SQLite and others
-        Base.metadata.create_all(bind=engine)
-        # If SQLite, ensure FTS virtual table and triggers exist
-        _ensure_sqlite_fts5_objects()
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+    # Ensure Postgres FTS objects
+    _ensure_postgres_fts_objects()
 
 
 @contextmanager
