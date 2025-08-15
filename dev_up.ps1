@@ -61,6 +61,9 @@ Write-Host "[6/8] Frontend deps"
 Push-Location "$ROOT\frontend"
 if (Get-Command yarn -ErrorAction SilentlyContinue) { yarn install }
 else { npm install --no-audit --no-fund --silent }
+Write-Host "[6.1/8] Playwright browsers"
+if (Get-Command yarn -ErrorAction SilentlyContinue) { yarn playwright install }
+else { npx playwright install }
 Pop-Location
 
 Write-Host "[7/8] Start backend and frontend"

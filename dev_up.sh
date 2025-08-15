@@ -66,6 +66,8 @@ PY
 echo "[6/8] Frontend deps"
 pushd "$ROOT_DIR/frontend" >/dev/null
 if command -v yarn >/dev/null 2>&1; then yarn -s install; else npm install --no-audit --no-fund --silent; fi
+echo "[6.1/8] Playwright browsers"
+if command -v yarn >/dev/null 2>&1; then yarn -s playwright install; else npx playwright install >/dev/null 2>&1 || ./node_modules/.bin/playwright install; fi
 popd >/dev/null
 
 echo "[7/8] Start backend and frontend"
