@@ -30,12 +30,6 @@ SessionLocal = sessionmaker(
     bind=engine,
 )
 
-
-def _ensure_postgres_fts_objects() -> None:
-    # Legacy FTS objects removed
-    return
-
-
 def init_db() -> None:
     # Reload entity module so its Base binding matches this module's Base
     import importlib
@@ -47,18 +41,14 @@ def init_db() -> None:
     except Exception:
         pass
 
-    # For Postgres, ensure required extensions BEFORE creating tables that rely on them
-    if engine.dialect.name == "postgresql":
-        try:
-            with engine.connect() as conn:
-                # pgvector for embedding column; pg_trgm for text search helpers
-                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-                conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
-                conn.commit()
-        except Exception:
-            # If extensions cannot be created due to permissions, table creation below may fail where types are missing
-            # This surfaces a clear error instead of silently proceeding
-            pass
+    # Require Postgres and ensure required extensions BEFORE creating tables that rely on them
+    if engine.dialect.name != "postgresql":
+        raise RuntimeError("PostgreSQL with pgvector is required. Set DATABASE_URL to a Postgres instance.")
+    with engine.connect() as conn:
+        # pgvector for embedding column; pg_trgm for text search helpers
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+        conn.commit()
 
     # Create tables
     Base.metadata.create_all(bind=engine)

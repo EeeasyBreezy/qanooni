@@ -86,14 +86,8 @@ class UploadService(IUploadService):
                                     document_id=int(entity.id),
                                     chunk_index=idx,
                                     content=chunk_text,
+                                    embedding=vec,
                                 )
-                                # Assign embedding when numeric vector returned
-                                try:
-                                    # pgvector as TEXT fallback in SQLite; store JSON string there
-                                    if hasattr(dc, "embedding"):
-                                        dc.embedding = vec  # type: ignore
-                                except Exception:
-                                    pass
                                 chunks_entities.append(dc)
                         if chunks_entities:
                             repo.bulk_create_document_chunks(chunks_entities)

@@ -1,7 +1,5 @@
 import importlib
 import os
-import tempfile
-import shutil
 from typing import List, Optional
 
 import pytest
@@ -9,10 +7,9 @@ import pytest
 
 class TestDocumentRepository:
     def setup_method(self) -> None:
-        # Create isolated temporary SQLite database file
-        self._tmp_dir = tempfile.mkdtemp(prefix="legalintel_test_")
-        self._db_path = os.path.join(self._tmp_dir, "test.db")
-        os.environ["DATABASE_URL"] = f"sqlite:///{self._db_path}"
+        # Ensure DATABASE_URL points to Postgres with pgvector (falls back to default if not set)
+        if not os.getenv("DATABASE_URL"):
+            os.environ["DATABASE_URL"] = "postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni"
 
         # Reload db module to pick up DATABASE_URL and rebuild engine/session
         from app import db as db_module  # type: ignore
@@ -38,12 +35,10 @@ class TestDocumentRepository:
         try:
             self.session.close()
         finally:
-            # Dispose engine and remove temp directory
             try:
                 self.db.engine.dispose()
             except Exception:
                 pass
-            shutil.rmtree(self._tmp_dir, ignore_errors=True)
 
     def _make_entity(
         self,
