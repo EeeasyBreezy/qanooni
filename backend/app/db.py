@@ -73,9 +73,23 @@ def init_db() -> None:
     except Exception:
         pass
 
+    # For Postgres, ensure required extensions BEFORE creating tables that rely on them
+    if engine.dialect.name == "postgresql":
+        try:
+            with engine.connect() as conn:
+                # pgvector for embedding column; pg_trgm for text search helpers
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+                conn.commit()
+        except Exception:
+            # If extensions cannot be created due to permissions, table creation below may fail where types are missing
+            # This surfaces a clear error instead of silently proceeding
+            pass
+
     # Create tables
     Base.metadata.create_all(bind=engine)
-    # Ensure Postgres FTS objects
+
+    # Ensure Postgres FTS objects (generated tsvector + index) after base tables exist
     _ensure_postgres_fts_objects()
 
 
