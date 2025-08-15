@@ -53,6 +53,13 @@ class ApiClient:
         items = [AggregationResultDTO(category=i["category"], count=int(i["count"])) for i in data["items"]]
         return PaginationDTO(items=items, limit=int(data["limit"]), offset=int(data["offset"]), total=int(data["total"]))
 
+    def get_industries_raw(self, params: Dict[str, Any]) -> PaginationDTO:
+        # Allows constructing requests with missing/invalid params for negative tests
+        qs = urlencode(params)
+        data = self._request("GET", f"/api/dashboard/industries?{qs}")
+        items = [AggregationResultDTO(category=i["category"], count=int(i["count"])) for i in data.get("items", [])]
+        return PaginationDTO(items=items, limit=int(data.get("limit", 0)), offset=int(data.get("offset", 0)), total=int(data.get("total", 0)))
+
     def run_query(self, *, question: str, limit: int, offset: int) -> QueryResponseDTO:
         qs = urlencode({"question": question, "limit": limit, "offset": offset})
         data = self._request("GET", f"/api/query?{qs}")

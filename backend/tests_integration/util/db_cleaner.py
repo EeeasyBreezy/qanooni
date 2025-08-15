@@ -1,10 +1,10 @@
 import os
-from typing import Iterable
+from typing import Iterable, Optional
 from sqlalchemy import create_engine, text
 
 
 class DatabaseCleaner:
-    def __init__(self, database_url: str | None = None) -> None:
+    def __init__(self, database_url: Optional[str] = None) -> None:
         self._url = database_url or os.getenv("DATABASE_URL", "postgresql+psycopg2://qanooni:qanooni@localhost:5432/qanooni")
         self._engine = create_engine(self._url, future=True)
 
