@@ -1,3 +1,4 @@
+import { config } from '@shared/config/env';
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 export type HttpClientOptions = {
@@ -73,11 +74,6 @@ export class HttpClient {
   }
 }
 
-const isMocksEnabled = ((import.meta as any)?.env?.VITE_USE_MOCKS ?? '') === 'true';
-export const httpBaseUrl: string = isMocksEnabled
-  ? ''
-  : ((import.meta as any)?.env?.VITE_API_BASE_URL ?? '/api');
-
 export const httpClient = new HttpClient({
-  baseURL: httpBaseUrl,
+  baseURL: config.baseUrl,
 });
