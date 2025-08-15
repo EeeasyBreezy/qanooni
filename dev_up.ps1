@@ -100,7 +100,7 @@ $frontend.Id | Out-File -FilePath $FRONTEND_PID_FILE -Encoding ascii -Force
 Write-Host "[8/8] Warmup check"
 $ok = $false
 1..30 | ForEach-Object {
-  try { Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/api/dashboard | Out-Null; $ok = $true; break } catch { Start-Sleep -Seconds 1 }
+  try { Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/api/dashboard/agreement-types | Out-Null; $ok = $true; break } catch { Start-Sleep -Seconds 1 }
 }
 if ($ok) { Write-Host "[ok] Backend responding" } else { Write-Host "[warn] Backend not responding yet; see $BACKEND_LOG" }
 
